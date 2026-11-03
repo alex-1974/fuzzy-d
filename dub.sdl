@@ -1,0 +1,8 @@
+name "fuzzy-d"
+description "Fuzzy logic sets, rules, and inference for D"
+homepage "https://github.com/alex-1974/fuzzy-d"
+authors "Alexander Bernardi"
+copyright "Copyright © 2026 Alexander Bernardi"
+license "MIT"
+targetType "library"
+sourcePaths "source"

@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible defect in fuzzy-d.
+title: ""
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Observed behavior
+      description: Include the model, input values and actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: toolchain
+    attributes:
+      label: Compiler and DUB versions
+      placeholder: DMD 2.111.0 / DUB 1.40.0
+    validations:
+      required: false

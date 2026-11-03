@@ -1,0 +1,23 @@
+name: Design discussion
+description: Discuss a public API or inference semantics change.
+title: ""
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Consumer problem
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed contract and alternatives
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and test cases
+    validations:
+      required: false
