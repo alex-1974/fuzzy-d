@@ -150,6 +150,8 @@ struct PreparedModel
     private Variable[] variables;
     private DynamicTerm[] terms;
 
+    @property size_t termCount() const pure nothrow @safe @nogc { return terms.length; }
+
     Variable variable(VariableId id) const
     {
         require(id.valid && id.value < variables.length, "prepared variable id is invalid");

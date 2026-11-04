@@ -1,0 +1,5 @@
+name "fuzzy-d-benchmarks"
+description "Development benchmarks for fuzzy-d execution paths"
+targetType "executable"
+dependency "fuzzy-d" path=".."
+sourcePaths "source"

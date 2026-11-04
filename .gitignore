@@ -18,3 +18,4 @@
 docs/file_hashes.json
 tests/consumer/.dub/
 tests/consumer/fuzzy-consumer-smoke
+benchmarks/fuzzy-d-benchmarks

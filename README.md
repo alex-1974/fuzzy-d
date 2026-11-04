@@ -47,6 +47,7 @@ Local commands:
 
 - [Roadmap](ROADMAP.md)
 - [Architecture and boundaries](docs/architecture.md)
+- [Consumer API](docs/api.md)
 - [Accuracy and validation plan](docs/accuracy-and-validation.md)
 - [Contributing](CONTRIBUTING.md)
 
