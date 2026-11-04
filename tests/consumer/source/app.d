@@ -16,7 +16,7 @@ bool closeEnough(double a, double b) pure nothrow @safe @nogc
 
 void main()
 {
-    static assert(fuzzyDevelopmentStatus == "pre-0.1");
+    static assert(fuzzyDevelopmentStatus == "0.1.0");
 
     auto model = new EditableModel;
     auto temperature = model.addVariable("temperature");

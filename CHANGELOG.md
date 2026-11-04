@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0 — 2026-11-04
+
+The first public release of fuzzy-d. This release provides a documented,
+consumer-oriented Type-1 fuzzy core with zero-order Sugeno inference.
+
+- Added validated membership functions, linguistic hedges and selectable operators.
+- Added editable, prepared, compile-time and multi-output evaluation paths.
+- Added explicit missing-input/no-result behavior and diagnostic traces.
+- Added public consumer facade, tutorials, independent consumer fixtures and
+  DMD/LDC release qualification.
+
 ## Unreleased
 
 - Initialized a standalone DUB library with an importable package root.

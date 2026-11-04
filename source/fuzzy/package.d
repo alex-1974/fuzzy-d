@@ -16,17 +16,17 @@ public import fuzzy.membership;
 public import fuzzy.multioutput;
 public import fuzzy.operators;
 
-/** Development marker (not a released semantic version).
+/** Released library version.
 
     Examples:
     ---
     import fuzzy;
-    static assert(fuzzyDevelopmentStatus == "pre-0.1");
+    static assert(fuzzyDevelopmentStatus == "0.1.0");
     ---
 */
-enum string fuzzyDevelopmentStatus = "pre-0.1";
+enum string fuzzyDevelopmentStatus = "0.1.0";
 
 unittest
 {
-    static assert(fuzzyDevelopmentStatus == "pre-0.1");
+    static assert(fuzzyDevelopmentStatus == "0.1.0");
 }
