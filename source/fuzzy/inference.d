@@ -407,6 +407,33 @@ unittest
 
 unittest
 {
+    import fuzzy.membership : RisingRamp, FallingRamp;
+    import fuzzy.ir : NormalizedExpression;
+
+    auto model = new EditableModel;
+    auto x = model.addVariable("x");
+    auto low = model.addTerm(x, "low", (double value) => FallingRamp(0.0, 10.0)(value));
+    auto high = model.addTerm(x, "high", (double value) => RisingRamp(0.0, 10.0)(value));
+    NormalizedExpression expression;
+    auto left = expression.addTerm(low);
+    auto right = expression.addTerm(high);
+    expression.setRoot(expression.addAllOf(left, right));
+
+    auto prepared = new PreparedZeroOrderSugeno;
+    prepared.addRule("one", expression.prepare(model), 10.0);
+    prepared.addRule("two", expression.prepare(model), 20.0);
+    auto snapshot = model.prepare();
+    foreach (input; [1.0, 2.5, 7.5, 9.0, 0.5])
+    {
+        auto expected = prepared.evaluate(snapshot, [input]);
+        auto actual = prepared.evaluateValue(snapshot, [input]);
+        assert(expected.hasValue);
+        assert(actual == expected.value);
+    }
+}
+
+unittest
+{
     import fuzzy.membership : RisingRamp;
     import fuzzy.ir : NormalizedExpression;
 
