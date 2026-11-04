@@ -7,6 +7,7 @@ import fuzzy.errors : MissingInputException;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel;
+import fuzzy.multioutput : MultiOutputSugeno;
 
 void main()
 {
@@ -152,4 +153,16 @@ void main()
         else
             assert(isNaN(numeric));
     }
+
+    // Advanced multi-output path: one antecedent drives two outputs.
+    auto multi = new MultiOutputSugeno;
+    auto heating = multi.addOutput("heating");
+    auto cooling = multi.addOutput("cooling");
+    multi.addRule("cold response", expression, [1.0, 0.0]);
+    auto multiResult = multi.evaluate(model, [0.0]);
+    assert(heating.valid && cooling.valid);
+    assert(multiResult.hasValue);
+    assert(multiResult.values.length == 2);
+    assert(multiResult.values[0] == 1.0);
+    assert(multiResult.values[1] == 0.0);
 }
