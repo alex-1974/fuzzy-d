@@ -7,9 +7,14 @@ The local Dunia-related checkout currently available at
 for masks and candidate objects. It does not currently contain fuzzy-d rules,
 membership parameters, inference outputs, or a production input-rate trace.
 
+The planned `dunia-water-d` / water-uncertainty research is useful as a domain
+and requirements source, but it is not yet a mature consumer model: the
+problem space is still exploratory and the likely model is too complex to use
+as a first public-API or performance contract.
+
 Therefore the repository cannot yet claim qualification against a real Dunia
 fuzzy workload. The benchmark's two-input risk example is a deliberately
-synthetic proxy, not a recovered Dunia model.
+small synthetic proxy, not a recovered Dunia model.
 
 ## Current proxy
 
@@ -46,5 +51,23 @@ Before making Dunia-specific performance claims, record:
 8. allocation observations under the consumer's release configuration.
 
 Until these data exist, fuzzy-d should optimize and qualify its generic
-representative families, while Dunia-specific thresholds remain open.
+representative families, while Dunia-specific thresholds remain open. Water
+research may contribute candidate variables, uncertainty categories and
+future model requirements, but it must not force premature Mamdani,
+defuzzification, temporal or probabilistic abstractions into the stable core.
+
+## Stable reference case
+
+The current two-input risk case is intentionally the small reference contract:
+
+- two normalized scalar inputs;
+- two simple monotone membership terms;
+- one binary antecedent;
+- zero-order Sugeno output;
+- named diagnostic evaluation and ordered numeric hot-path evaluation.
+
+It is large enough to exercise the public API and prepared execution, while
+remaining easy to audit and compare across compilers. A future water-specific
+fixture should be admitted only after its semantics and expected outputs are
+stable enough for regression use.
 
