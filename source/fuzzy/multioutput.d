@@ -87,6 +87,35 @@ final class MultiOutputSugeno
         return result;
     }
 
+    /**
+     * Evaluate into caller-owned output storage.
+     *
+     * Returns false when no rule is activated and fills `outputs` with NaN,
+     * matching `MultiOutputResult`'s no-result semantics. The output buffer is
+     * reused and must have exactly `outputCount` elements.
+     */
+    bool evaluateInto(const EditableModel model, const double[] inputs,
+                      double[] outputs) const
+    {
+        enforce(outputs.length == outputCount, "multi-output buffer length must match output count");
+        outputs[] = 0.0;
+        double totalActivation = 0.0;
+        foreach (rule; rules)
+        {
+            auto activation = rule.antecedent.evaluate(model, inputs);
+            totalActivation += activation.value;
+            foreach (i, consequent; rule.consequents)
+                outputs[i] += activation.value * consequent;
+        }
+        if (totalActivation == 0.0)
+        {
+            outputs[] = double.nan;
+            return false;
+        }
+        outputs[] /= totalActivation;
+        return true;
+    }
+
     @property size_t outputCount() const pure nothrow @safe @nogc { return outputs.length; }
     @property size_t ruleCount() const pure nothrow @safe @nogc { return rules.length; }
 }
@@ -113,4 +142,9 @@ unittest
     assert(result.values.length == 2);
     assert(abs(result.values[0] - 0.8) < 1e-12);
     assert(abs(result.values[1] - 0.4) < 1e-12);
+
+    auto outputBuffer = [0.0, 0.0];
+    assert(rules.evaluateInto(model, [5.0], outputBuffer));
+    assert(outputBuffer[0] == result.values[0]);
+    assert(outputBuffer[1] == result.values[1]);
 }
