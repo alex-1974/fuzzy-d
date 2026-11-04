@@ -11,7 +11,7 @@ import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel, TermId;
 import fuzzy.operators : OperatorFamily;
 import fuzzy.facade : FuzzyModelBuilder, inputs;
-import fuzzy.multioutput : MultiOutputSugeno;
+import fuzzy.multioutput : MultiOutputSugeno, PreparedMultiOutputSugeno;
 
 struct BenchmarkResult
 {
@@ -239,10 +239,16 @@ void runMultiOutputCase(size_t iterations)
     NormalizedExpression expression;
     expression.setRoot(expression.addTerm(term));
     auto rules = new MultiOutputSugeno;
+    auto preparedRules = new PreparedMultiOutputSugeno;
     rules.addOutput("heating");
     rules.addOutput("cooling");
+    preparedRules.addOutput("heating");
+    preparedRules.addOutput("cooling");
     foreach (i; 0 .. 20)
         rules.addRule("rule", expression, [cast(double)(i + 1), cast(double)(20 - i)]);
+    foreach (i; 0 .. 20)
+        preparedRules.addRule("rule", expression, model, [cast(double)(i + 1), cast(double)(20 - i)]);
+    auto preparedModel = model.prepare();
 
     double allocatingSink = 0.0;
     auto input = [0.0];
@@ -266,8 +272,21 @@ void runMultiOutputCase(size_t iterations)
     }
     auto bufferNanos = bufferWatch.peek.total!"nsecs";
     auto allocatedBytes = GC.allocatedInCurrentThread() - allocatedBefore;
-    writefln("multioutput iterations=%s allocating_ns=%s buffer_ns=%s buffer_allocated_bytes=%s sinks=%s/%s",
-        iterations, allocatingNanos, bufferNanos, allocatedBytes, allocatingSink, bufferSink);
+    double preparedSink = 0.0;
+    auto preparedBuffer = [0.0, 0.0];
+    auto preparedAllocatedBefore = GC.allocatedInCurrentThread();
+    auto preparedWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. iterations)
+    {
+        input[0] = cast(double)(i % 100) / 100.0;
+        if (preparedRules.evaluateInto(preparedModel, input, preparedBuffer))
+            preparedSink += preparedBuffer[0] + preparedBuffer[1];
+    }
+    auto preparedNanos = preparedWatch.peek.total!"nsecs";
+    auto preparedAllocatedBytes = GC.allocatedInCurrentThread() - preparedAllocatedBefore;
+    writefln("multioutput iterations=%s allocating_ns=%s buffer_ns=%s prepared_ns=%s buffer_allocated_bytes=%s prepared_allocated_bytes=%s sinks=%s/%s/%s",
+        iterations, allocatingNanos, bufferNanos, preparedNanos, allocatedBytes,
+        preparedAllocatedBytes, allocatingSink, bufferSink, preparedSink);
 }
 
 void main()

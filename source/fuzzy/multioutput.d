@@ -229,3 +229,15 @@ unittest
     assert(rules.evaluateInto(model.prepare(), [5.0], values));
     assert(values[0] == 0.8 && values[1] == 0.4);
 }
+
+unittest
+{
+    import std.math : isNaN;
+    auto rules = new MultiOutputSugeno;
+    rules.addOutput("a");
+    rules.addOutput("b");
+    auto model = new EditableModel;
+    auto output = [0.0, 0.0];
+    assert(!rules.evaluateInto(model, [], output));
+    assert(isNaN(output[0]) && isNaN(output[1]));
+}

@@ -101,3 +101,8 @@ For advanced multi-output models, `fuzzy.multioutput` provides both the
 allocation-producing `MultiOutputSugeno.evaluate` convenience method and
 caller-owned `evaluateInto` methods. `PreparedMultiOutputSugeno` is the
 repeated-evaluation path for fully present numeric inputs.
+
+Prepared evaluator instances are intended to be configured once and then
+shared for read-only use. Each concurrent evaluation needs its own mutable
+caller-owned output buffer; the evaluator does not retain input or output
+array references.
