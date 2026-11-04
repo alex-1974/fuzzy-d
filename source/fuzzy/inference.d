@@ -99,6 +99,7 @@ struct PreparedSugenoRule
     TermId termId;
     bool directBinary;
     bool binaryAnd;
+    OperatorFamily binaryFamily;
     VariableId leftVariable;
     VariableId rightVariable;
     TermId leftTermId;
@@ -140,10 +141,11 @@ final class PreparedZeroOrderSugeno
             }
             ++termUseCount[rule.termId.value];
         }
-        else if (antecedent.hasBoundBinaryTerms && antecedent.operators == OperatorFamily.godel)
+        else if (antecedent.hasBoundBinaryTerms)
         {
             rule.directBinary = true;
             rule.binaryAnd = antecedent.boundBinaryIsAnd;
+            rule.binaryFamily = antecedent.operators;
             rule.leftVariable = antecedent.boundLeftVariable;
             rule.rightVariable = antecedent.boundRightVariable;
             rule.leftTermId = antecedent.boundLeftTermId;
@@ -263,9 +265,14 @@ final class PreparedZeroOrderSugeno
                 }
                 else
                     right = termCache[rule.rightTermId.value];
-                activation = rule.binaryAnd ?
-                    (left < right ? left : right) :
-                    (left > right ? left : right);
+                if (rule.binaryFamily == OperatorFamily.godel)
+                    activation = rule.binaryAnd ?
+                        (left < right ? left : right) :
+                        (left > right ? left : right);
+                else if (rule.binaryAnd)
+                    activation = left * right;
+                else
+                    activation = left + right - left * right;
             }
             else
                 activation = rule.antecedent.evaluateValue(model, inputs);

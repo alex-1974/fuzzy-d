@@ -8,19 +8,23 @@ import fuzzy;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel, TermId;
+import fuzzy.operators : OperatorFamily;
 
 struct BenchmarkResult
 {
     size_t rules;
     size_t iterations;
+    size_t traceIterations;
     long directNanos;
     long preparedNanos;
     long preparationNanos;
+    long preparedTraceNanos;
     double directSink = 0.0;
     double preparedSink = 0.0;
 }
 
-BenchmarkResult runCase(size_t ruleCount, size_t iterations)
+BenchmarkResult runCase(size_t ruleCount, size_t iterations,
+                        OperatorFamily family, bool composite)
 {
     auto model = new EditableModel;
     auto x = model.addVariable("x");
@@ -40,8 +44,14 @@ BenchmarkResult runCase(size_t ruleCount, size_t iterations)
     {
         NormalizedExpression expression;
         auto first = expression.addTerm(termIds[i % uniqueTerms]);
-        auto second = expression.addTerm(termIds[(i + 1) % uniqueTerms]);
-        expression.setRoot(expression.addAllOf(first, second));
+        if (composite)
+        {
+            auto second = expression.addTerm(termIds[(i + 1) % uniqueTerms]);
+            expression.setRoot(expression.addAllOf(first, second));
+        }
+        else
+            expression.setRoot(first);
+        expression.setOperatorFamily(family);
         direct.addRule("rule", expression, i);
         prepared.addRule("rule", expression, model, i);
     }
@@ -70,6 +80,16 @@ BenchmarkResult runCase(size_t ruleCount, size_t iterations)
     }
     result.preparedNanos = preparedWatch.peek.total!"nsecs";
 
+    result.traceIterations = iterations / 10 + 1;
+    auto traceWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. result.traceIterations)
+    {
+        input[0] = cast(double)(i % 99 + 1) / 100.0;
+        auto traced = prepared.evaluate(preparedModel, input);
+        if (traced.hasValue) result.preparedTraceNanos += cast(long)(traced.trace.length);
+    }
+    result.preparedTraceNanos = traceWatch.peek.total!"nsecs";
+
     auto preparationWatch = StopWatch(AutoStart.yes);
     foreach (i; 0 .. 1000)
     {
@@ -84,11 +104,16 @@ void main()
 {
     foreach (spec; [[10UL, 100_000UL], [100UL, 100_000UL], [1000UL, 10_000UL]])
     {
-        auto result = runCase(spec[0], spec[1]);
-        writefln("rules=%s iterations=%s direct_ns=%s prepared_ns=%s prepare_1000_ns=%s",
-            result.rules, result.iterations, result.directNanos,
-            result.preparedNanos, result.preparationNanos);
+        foreach (family; [OperatorFamily.godel, OperatorFamily.product])
+        foreach (composite; [false, true])
+        {
+        auto result = runCase(spec[0], spec[1], family, composite);
+        writefln("family=%s shape=%s rules=%s iterations=%s trace_iterations=%s direct_ns=%s prepared_ns=%s trace_ns=%s prepare_1000_ns=%s",
+            family, composite ? "binary" : "term",
+            result.rules, result.iterations, result.traceIterations, result.directNanos,
+            result.preparedNanos, result.preparedTraceNanos, result.preparationNanos);
         writefln("  sinks direct=%s prepared=%s",
             result.directSink, result.preparedSink);
+        }
     }
 }
