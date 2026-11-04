@@ -7,7 +7,7 @@ import std.stdio : writefln;
 import fuzzy;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
-import fuzzy.model : EditableModel;
+import fuzzy.model : EditableModel, TermId;
 
 struct BenchmarkResult
 {
@@ -28,19 +28,20 @@ BenchmarkResult runCase(size_t ruleCount, size_t iterations)
     auto direct = new ExpressionZeroOrderSugeno;
     auto prepared = new PreparedZeroOrderSugeno;
 
-    NormalizedExpression[] expressions;
+    TermId[] termIds;
     auto uniqueTerms = ruleCount / 2 + ruleCount % 2;
     foreach (i; 0 .. uniqueTerms)
     {
         auto term = model.addTerm(x, "term" ~ to!string(i),
             (double value) => shape(value));
-        NormalizedExpression expression;
-        expression.setRoot(expression.addTerm(term));
-        expressions ~= expression;
+        termIds ~= term;
     }
     foreach (i; 0 .. ruleCount)
     {
-        auto expression = expressions[i % uniqueTerms];
+        NormalizedExpression expression;
+        auto first = expression.addTerm(termIds[i % uniqueTerms]);
+        auto second = expression.addTerm(termIds[(i + 1) % uniqueTerms]);
+        expression.setRoot(expression.addAllOf(first, second));
         direct.addRule("rule", expression, i);
         prepared.addRule("rule", expression, model, i);
     }

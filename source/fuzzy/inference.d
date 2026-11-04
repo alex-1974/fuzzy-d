@@ -4,6 +4,7 @@ import std.exception : enforce;
 import std.math : isNaN;
 import fuzzy.degree : Degree;
 import fuzzy.ir : NormalizedExpression, PreparedExpression;
+import fuzzy.operators : OperatorFamily;
 import fuzzy.model : EditableModel, InputVector, PreparedModel, VariableId, TermId;
 
 /** Stable identifier of a rule within one rule set. */
@@ -96,6 +97,14 @@ struct PreparedSugenoRule
     VariableId variable;
     Degree delegate(double) evaluator;
     TermId termId;
+    bool directBinary;
+    bool binaryAnd;
+    VariableId leftVariable;
+    VariableId rightVariable;
+    TermId leftTermId;
+    TermId rightTermId;
+    Degree delegate(double) leftEvaluator;
+    Degree delegate(double) rightEvaluator;
 }
 
 /** Reusable prepared Sugeno evaluator. */
@@ -104,6 +113,7 @@ final class PreparedZeroOrderSugeno
     private PreparedSugenoRule[] rules;
     private double[] termCache;
     private size_t[] termCacheGeneration;
+    private size_t[] termUseCount;
     private size_t generation;
 
     RuleId addRule(string name, PreparedExpression antecedent, double consequent)
@@ -126,7 +136,30 @@ final class PreparedZeroOrderSugeno
             {
                 termCache.length = rule.termId.value + 1;
                 termCacheGeneration.length = rule.termId.value + 1;
+                termUseCount.length = rule.termId.value + 1;
             }
+            ++termUseCount[rule.termId.value];
+        }
+        else if (antecedent.hasBoundBinaryTerms && antecedent.operators == OperatorFamily.godel)
+        {
+            rule.directBinary = true;
+            rule.binaryAnd = antecedent.boundBinaryIsAnd;
+            rule.leftVariable = antecedent.boundLeftVariable;
+            rule.rightVariable = antecedent.boundRightVariable;
+            rule.leftTermId = antecedent.boundLeftTermId;
+            rule.rightTermId = antecedent.boundRightTermId;
+            rule.leftEvaluator = antecedent.boundLeftEvaluator;
+            rule.rightEvaluator = antecedent.boundRightEvaluator;
+            auto maxTerm = rule.leftTermId.value > rule.rightTermId.value ?
+                rule.leftTermId.value : rule.rightTermId.value;
+            if (termCache.length <= maxTerm)
+            {
+                termCache.length = maxTerm + 1;
+                termCacheGeneration.length = maxTerm + 1;
+                termUseCount.length = maxTerm + 1;
+            }
+            ++termUseCount[rule.leftTermId.value];
+            ++termUseCount[rule.rightTermId.value];
         }
         rules ~= rule;
         return id;
@@ -195,15 +228,47 @@ final class PreparedZeroOrderSugeno
             double activation;
             if (rule.directTerm)
             {
-                if (termCacheGeneration[rule.termId.value] != generation)
+                if (termUseCount[rule.termId.value] <= 1)
+                    activation = rule.evaluator(inputs[rule.variable.value]).value;
+                else if (termCacheGeneration[rule.termId.value] != generation)
                 {
                     termCache[rule.termId.value] = rule.evaluator(inputs[rule.variable.value]).value;
                     termCacheGeneration[rule.termId.value] = generation;
+                    activation = termCache[rule.termId.value];
                 }
-                activation = termCache[rule.termId.value];
+                else
+                    activation = termCache[rule.termId.value];
+            }
+            else if (rule.directBinary)
+            {
+                double left;
+                double right;
+                if (termUseCount[rule.leftTermId.value] <= 1)
+                    left = rule.leftEvaluator(inputs[rule.leftVariable.value]).value;
+                else if (termCacheGeneration[rule.leftTermId.value] != generation)
+                {
+                    left = rule.leftEvaluator(inputs[rule.leftVariable.value]).value;
+                    termCache[rule.leftTermId.value] = left;
+                    termCacheGeneration[rule.leftTermId.value] = generation;
+                }
+                else
+                    left = termCache[rule.leftTermId.value];
+                if (termUseCount[rule.rightTermId.value] <= 1)
+                    right = rule.rightEvaluator(inputs[rule.rightVariable.value]).value;
+                else if (termCacheGeneration[rule.rightTermId.value] != generation)
+                {
+                    right = rule.rightEvaluator(inputs[rule.rightVariable.value]).value;
+                    termCache[rule.rightTermId.value] = right;
+                    termCacheGeneration[rule.rightTermId.value] = generation;
+                }
+                else
+                    right = termCache[rule.rightTermId.value];
+                activation = rule.binaryAnd ?
+                    (left < right ? left : right) :
+                    (left > right ? left : right);
             }
             else
-                activation = rule.antecedent.evaluate(model, inputs).value;
+                activation = rule.antecedent.evaluateValue(model, inputs);
             numerator += activation * rule.consequent;
             denominator += activation;
         }
@@ -293,6 +358,37 @@ unittest
     assert(result.trace.length == 2);
     assert(result.totalActivation == 1.0);
     assert(result.value == 17.5);
+}
+
+unittest
+{
+    import fuzzy.membership : RisingRamp, FallingRamp;
+    import fuzzy.ir : NormalizedExpression;
+    import fuzzy.operators : OperatorFamily;
+
+    auto model = new EditableModel;
+    auto x = model.addVariable("x");
+    auto low = model.addTerm(x, "low", (double value) => FallingRamp(0.0, 10.0)(value));
+    auto high = model.addTerm(x, "high", (double value) => RisingRamp(0.0, 10.0)(value));
+
+    foreach (family; [OperatorFamily.godel, OperatorFamily.product])
+    {
+        NormalizedExpression expression;
+        expression.setOperatorFamily(family);
+        auto left = expression.addTerm(low);
+        auto right = expression.addTerm(high);
+        expression.setRoot(expression.addAllOf(left, right));
+
+        auto prepared = new PreparedZeroOrderSugeno;
+        prepared.addRule("first", expression.prepare(model), 10.0);
+        prepared.addRule("second", expression.prepare(model), 20.0);
+        auto snapshot = model.prepare();
+        auto traced = prepared.evaluate(snapshot, [2.5]);
+        auto numeric = prepared.evaluateValue(snapshot, [2.5]);
+
+        assert(traced.hasValue);
+        assert(numeric == traced.value);
+    }
 }
 
 unittest

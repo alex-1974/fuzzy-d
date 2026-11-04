@@ -114,6 +114,22 @@ struct NormalizedExpression
             prepared.boundEvaluator = term.evaluator;
             prepared.bound = true;
         }
+        if ((nodes[root].kind == ExpressionKind.allOf || nodes[root].kind == ExpressionKind.anyOf) &&
+            nodes[root].left < nodes.length && nodes[root].right < nodes.length &&
+            nodes[nodes[root].left].kind == ExpressionKind.term &&
+            nodes[nodes[root].right].kind == ExpressionKind.term)
+        {
+            auto leftTerm = model.term(nodes[nodes[root].left].term);
+            auto rightTerm = model.term(nodes[nodes[root].right].term);
+            prepared.boundBinary = true;
+            prepared.binaryAnd = nodes[root].kind == ExpressionKind.allOf;
+            prepared.leftTerm = nodes[nodes[root].left].term;
+            prepared.rightTerm = nodes[nodes[root].right].term;
+            prepared.leftVariable = leftTerm.variable;
+            prepared.rightVariable = rightTerm.variable;
+            prepared.leftEvaluator = leftTerm.evaluator;
+            prepared.rightEvaluator = rightTerm.evaluator;
+        }
         prepared.boundEvaluators = new Degree delegate(double)[nodes.length];
         prepared.boundVariables = new VariableId[nodes.length];
         prepared.boundNodes = new bool[nodes.length];
@@ -218,6 +234,14 @@ struct PreparedExpression
     private VariableId boundVariable;
     private Degree delegate(double) boundEvaluator;
     private bool bound;
+    private bool boundBinary;
+    private bool binaryAnd;
+    private TermId leftTerm;
+    private TermId rightTerm;
+    private VariableId leftVariable;
+    private VariableId rightVariable;
+    private Degree delegate(double) leftEvaluator;
+    private Degree delegate(double) rightEvaluator;
     private Degree delegate(double)[] boundEvaluators;
     private VariableId[] boundVariables;
     private bool[] boundNodes;
@@ -242,6 +266,15 @@ struct PreparedExpression
         return rootTerm;
     }
 
+    @property bool hasBoundBinaryTerms() const pure nothrow @safe @nogc { return boundBinary; }
+    @property bool boundBinaryIsAnd() const pure nothrow @safe @nogc { return binaryAnd; }
+    @property VariableId boundLeftVariable() const pure nothrow @safe @nogc { return leftVariable; }
+    @property VariableId boundRightVariable() const pure nothrow @safe @nogc { return rightVariable; }
+    @property TermId boundLeftTermId() const pure nothrow @safe @nogc { return leftTerm; }
+    @property TermId boundRightTermId() const pure nothrow @safe @nogc { return rightTerm; }
+    @property Degree delegate(double) boundLeftEvaluator() const { return leftEvaluator; }
+    @property Degree delegate(double) boundRightEvaluator() const { return rightEvaluator; }
+
     @property Degree delegate(double) boundTermEvaluator() const
     {
         return boundEvaluator;
@@ -257,6 +290,25 @@ struct PreparedExpression
         return evaluate(model, InputVector(inputs.dup));
     }
 
+    /** Numeric prepared fast path for fully present caller-owned inputs. */
+    double evaluateValue(const PreparedModel model, const double[] inputs) const
+    {
+        if (singleTerm && bound)
+            return boundEvaluator(inputs[boundVariable.value]).value;
+        if (boundBinary)
+        {
+            auto left = leftEvaluator(inputs[leftVariable.value]);
+            auto right = rightEvaluator(inputs[rightVariable.value]);
+            if (operatorFamily == OperatorFamily.godel)
+                return (binaryAnd ?
+                    (left.value < right.value ? left : right) :
+                    (left.value > right.value ? left : right)).value;
+            return (binaryAnd ? fuzzyAnd(operatorFamily, left, right)
+                : fuzzyOr(operatorFamily, left, right)).value;
+        }
+        return evaluate(model, inputs).value;
+    }
+
     Degree evaluate(const PreparedModel model, const InputVector inputs) const
     {
         enforce(root != size_t.max, "prepared expression has no root");
@@ -265,6 +317,21 @@ struct PreparedExpression
             if (!inputs.available(boundVariable))
                 throw new MissingInputException("input value is missing for term variable");
             return boundEvaluator(inputs.value(boundVariable));
+        }
+        if (boundBinary)
+        {
+            if (!inputs.available(leftVariable) || !inputs.available(rightVariable))
+                throw new MissingInputException("input value is missing for binary expression");
+            auto left = leftEvaluator(inputs.value(leftVariable));
+            auto right = rightEvaluator(inputs.value(rightVariable));
+            if (operatorFamily == OperatorFamily.godel)
+            {
+                if (binaryAnd)
+                    return left.value < right.value ? left : right;
+                return left.value > right.value ? left : right;
+            }
+            return binaryAnd ? fuzzyAnd(operatorFamily, left, right)
+                : fuzzyOr(operatorFamily, left, right);
         }
         if (singleTerm)
         {
