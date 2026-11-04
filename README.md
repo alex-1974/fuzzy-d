@@ -46,7 +46,9 @@ Local commands:
 
     dub test --compiler=dmd --force
     dub test --compiler=ldc2 --force
-    dub run --root=tests/consumer --compiler=dmd --force
+    dub run --root=tests/consumer --compiler=dmd --build=release --force
+    dub run --root=tests/consumer --compiler=ldc2 --build=release --force
+    dub run --root=benchmarks --compiler=ldc2 --build=release --force
 
 ## Project documents
 
