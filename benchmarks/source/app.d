@@ -160,6 +160,57 @@ void runDuniaCase(size_t iterations)
         allocatedBytes, directSink, preparedSink, numericSink);
 }
 
+void runThermostatCase(size_t iterations)
+{
+    auto builder = new FuzzyModelBuilder;
+    builder.input("temperatureError")
+        .term("cold", (double value) => risingRamp(0.0, 10.0)(value))
+        .term("comfortable", (double value) => triangle(-2.0, 0.0, 2.0)(value))
+        .term("hot", (double value) => fallingRamp(-10.0, 0.0)(value))
+        .input("temperatureTrend")
+        .term("falling", (double value) => fallingRamp(-5.0, 0.0)(value))
+        .term("stable", (double value) => triangle(-2.0, 0.0, 2.0)(value))
+        .term("rising", (double value) => risingRamp(0.0, 5.0)(value))
+        .output("heating")
+        .rule("cold and falling")
+        .whenAll("temperatureError", "cold", "temperatureTrend", "falling")
+        .then("heating", 1.0)
+        .rule("cold and stable")
+        .whenAll("temperatureError", "cold", "temperatureTrend", "stable")
+        .then("heating", 0.7)
+        .rule("comfortable")
+        .when("temperatureError", "comfortable")
+        .then("heating", 0.2)
+        .rule("hot")
+        .when("temperatureError", "hot")
+        .then("heating", 0.0);
+    auto model = builder.build();
+    auto prepared = model.prepare();
+    double namedSink = 0.0;
+    double numericSink = 0.0;
+    auto namedWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. iterations)
+    {
+        auto result = prepared.evaluate(inputs()
+            .set("temperatureError", cast(double)(i % 21) - 10.0)
+            .set("temperatureTrend", cast(double)(i % 11) - 5.0));
+        if (result.hasValue) namedSink += result.value;
+    }
+    auto namedNanos = namedWatch.peek.total!"nsecs";
+    auto values = [0.0, 0.0];
+    auto numericWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. iterations)
+    {
+        values[0] = cast(double)(i % 21) - 10.0;
+        values[1] = cast(double)(i % 11) - 5.0;
+        auto value = prepared.evaluateValue(values);
+        if (!isNaN(value)) numericSink += value;
+    }
+    auto numericNanos = numericWatch.peek.total!"nsecs";
+    writefln("thermostat iterations=%s prepared_named_ns=%s prepared_numeric_ns=%s sinks=%s/%s",
+        iterations, namedNanos, numericNanos, namedSink, numericSink);
+}
+
 void main()
 {
     foreach (spec; [[10UL, 100_000UL], [100UL, 100_000UL], [1000UL, 10_000UL]])
@@ -178,4 +229,5 @@ void main()
         }
     }
     runDuniaCase(100_000);
+    runThermostatCase(100_000);
 }

@@ -11,6 +11,9 @@ numeric facade path, which reuses a caller-owned ordered value buffer.
 The Dunia case also reports runtime GC bytes observed during the numeric loop;
 this is evidence for the selected workload, not a universal `@nogc` claim for
 user-supplied membership delegates.
+The thermostat case is the canonical general-purpose consumer workload used by
+the consumer smoke test and compares prepared named versus prepared numeric
+evaluation.
 The prepared fast path is intended for fully present numeric inputs; callers
 that need missing-input detection or rule traces use the regular `evaluate`
 overload.

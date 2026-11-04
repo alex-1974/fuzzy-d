@@ -1,6 +1,8 @@
 module app;
 
+import std.exception : assertThrown;
 import fuzzy;
+import fuzzy.errors : MissingInputException;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel;
@@ -124,4 +126,6 @@ void main()
     assert(preparedThermostat.inputName(1) == "temperatureTrend");
     auto numericHeating = preparedThermostat.evaluateValue([5.0, -2.0]);
     assert(numericHeating == thermostatResult.value);
+    assertThrown!MissingInputException(
+        thermostatModel.evaluate(inputs().set("temperatureError", 5.0)));
 }
