@@ -76,3 +76,26 @@ temperature error and temperature trend as inputs and heating power as a
 zero-order Sugeno output. It is intentionally independent of Dunia and water
 research.
 
+## Independent public-API consumers
+
+The repository contains three deliberately ordinary consumers that depend on
+fuzzy-d through DUB rather than internal source paths:
+
+- `tests/consumer`: a two-input room thermostat using named and prepared evaluation.
+- `tests/consumer-sensor`: sensor fusion where combined vibration and temperature
+  evidence produces a stronger maintenance-risk conclusion than vibration alone.
+- `tests/consumer-fan`: fan control using the prepared numeric hot path.
+
+Run the independent fixtures with either supported compiler:
+
+```sh
+dub run --root=tests/consumer-sensor --compiler=dmd --build=release --force
+dub run --root=tests/consumer-sensor --compiler=ldc2 --build=release --force
+dub run --root=tests/consumer-fan --compiler=dmd --build=release --force
+dub run --root=tests/consumer-fan --compiler=ldc2 --build=release --force
+```
+
+These are qualification examples, not calibrated safety or maintenance
+systems. Their outputs are fuzzy decision grades and must not be interpreted
+as probabilities without an application-specific calibration study.
+
