@@ -51,3 +51,9 @@ dub run --root=benchmarks --compiler=ldc2 --build=release --force
 The benchmark output must retain compiler, build mode, workload, iteration
 count, preparation cost, break-even estimate and allocation observations.
 
+The same non-Ddoc gates can be run locally with:
+
+```sh
+bash tools/qualify.sh
+```
+

@@ -50,6 +50,10 @@ Local commands:
     dub run --root=tests/consumer --compiler=ldc2 --build=release --force
     dub run --root=benchmarks --compiler=ldc2 --build=release --force
 
+Or run the non-Ddoc qualification gates together:
+
+    bash tools/qualify.sh
+
 ## Project documents
 
 - [Roadmap](ROADMAP.md)
