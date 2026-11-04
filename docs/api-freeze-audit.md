@@ -46,12 +46,12 @@ The optional trusted/static `@nogc` executor is not part of the current API.
 
 ## Remaining pre-0.1 decisions
 
-1. Decide whether Multi-Output belongs in the initial stable facade or remains
-   advanced-module-only.
-2. Decide whether `cloneForWorker` is sufficient or whether a cache-free
-   thread-safe executor is required by a real consumer.
-3. Define the supported compiler floor and run the full release matrix; the
-   currently observed local baseline is recorded in `toolchain-support.md`.
+1. Keep Multi-Output as an advanced package-root export for 0.1; do not add a
+   second named-output facade until a concrete consumer needs it.
+2. Treat `cloneForWorker` as sufficient for 0.1; a cache-free thread-safe
+   executor remains a later option driven by a real concurrent consumer.
+3. Use the toolchain matrix in `toolchain-support.md` as the 0.1 candidate
+   floor; final acceptance still depends on CI passing every entry.
 4. Add a concise migration note if any of the freeze candidates change before
    0.1.0.
 
