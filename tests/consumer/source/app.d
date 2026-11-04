@@ -1,6 +1,7 @@
 module app;
 
 import std.exception : assertThrown;
+import std.math : isNaN;
 import fuzzy;
 import fuzzy.errors : MissingInputException;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
@@ -131,4 +132,24 @@ void main()
     assert(numericHeating == thermostatResult.value);
     assertThrown!MissingInputException(
         thermostatModel.evaluate(inputs().set("temperatureError", 5.0)));
+
+    foreach (error; [-10.0, -2.0, -1.0, 0.0, 1.0, 2.0, 5.0, 10.0])
+    foreach (trend; [-5.0, -2.0, -1.0, 0.0, 1.0, 2.0, 5.0])
+    {
+        auto named = thermostatModel.evaluate(inputs()
+            .set("temperatureError", error)
+            .set("temperatureTrend", trend));
+        auto preparedNamed = preparedThermostat.evaluate(inputs()
+            .set("temperatureError", error)
+            .set("temperatureTrend", trend));
+        auto numeric = preparedThermostat.evaluateValue([error, trend]);
+        assert(named.hasValue == preparedNamed.hasValue);
+        if (named.hasValue)
+        {
+            assert(named.value == preparedNamed.value);
+            assert(numeric == named.value);
+        }
+        else
+            assert(isNaN(numeric));
+    }
 }
