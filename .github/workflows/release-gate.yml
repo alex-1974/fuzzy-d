@@ -51,6 +51,8 @@ jobs:
         run: dub run --root=tests/consumer --compiler="$DC" --force
       - name: Release build
         run: dub build --build=release --compiler="$DC" --force
+      - name: Representative benchmarks
+        run: dub run --root=benchmarks --build=release --compiler="$DC" --force
       - name: Ddoc build
         if: startsWith(matrix.compiler, 'dmd-')
         run: dub build --build=docs --compiler="$DC" --force
