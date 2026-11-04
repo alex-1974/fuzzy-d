@@ -29,6 +29,7 @@ of the normal iteration count and reports that count explicitly. It is
 exploratory evidence, not yet a release threshold. Results must be recorded together with compiler,
 CPU, build mode, workload and iteration count; a single local run is not a
 portable performance contract.
-Each rule-set case also reports an approximate prepared-state break-even count:
-the number of repeated evaluations needed to amortize one preparation. It is
-only meaningful for the measured model and compiler configuration.
+Each rule-set case reports both snapshot preparation and full prepared-plan
+construction. Its approximate break-even count uses the full plan cost: the
+number of repeated evaluations needed to amortize preparation. It is only
+meaningful for the measured model and compiler configuration.

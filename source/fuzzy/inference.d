@@ -288,6 +288,8 @@ final class PreparedZeroOrderSugeno
         }
         return denominator == 0.0 ? double.nan : numerator / denominator;
     }
+
+    @property size_t ruleCount() const pure nothrow @safe @nogc { return rules.length; }
 }
 
 /** Runtime rule using the normalized expression API instead of a delegate. */
