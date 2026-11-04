@@ -12,5 +12,7 @@
   benchmark proxy with preparation break-even and allocation measurements.
 - Added DMD/LDC release qualification documentation and explicit No-Result
   semantics.
+- Recorded the pre-0.1 public API freeze candidates and remaining compatibility
+  decisions.
 
 No versioned release has been issued.
