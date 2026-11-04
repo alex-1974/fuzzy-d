@@ -1,0 +1,4 @@
+name "fuzzy-consumer-fan"
+description "Independent fan-control consumer smoke for fuzzy-d"
+targetType "executable"
+dependency "fuzzy-d" path="../.."
