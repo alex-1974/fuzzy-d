@@ -58,6 +58,7 @@ Local commands:
 - [Accuracy and validation plan](docs/accuracy-and-validation.md)
 - [Release qualification](docs/release-qualification.md)
 - [Pre-0.1 API freeze audit](docs/api-freeze-audit.md)
+- [Toolchain support](docs/toolchain-support.md)
 - [Thermostat tutorial](docs/tutorial/thermostat.md)
 - [Consumer qualification boundary](docs/consumer-qualification.md)
 - [Contributing](CONTRIBUTING.md)

@@ -50,7 +50,8 @@ The optional trusted/static `@nogc` executor is not part of the current API.
    advanced-module-only.
 2. Decide whether `cloneForWorker` is sufficient or whether a cache-free
    thread-safe executor is required by a real consumer.
-3. Define the supported compiler floor and run the full release matrix.
+3. Define the supported compiler floor and run the full release matrix; the
+   currently observed local baseline is recorded in `toolchain-support.md`.
 4. Add a concise migration note if any of the freeze candidates change before
    0.1.0.
 
