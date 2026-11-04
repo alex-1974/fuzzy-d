@@ -21,6 +21,7 @@ struct BenchmarkResult
     long preparedNanos;
     long preparationNanos;
     long preparedTraceNanos;
+    double breakEvenEvaluations;
     double directSink = 0.0;
     double preparedSink = 0.0;
 }
@@ -96,9 +97,14 @@ BenchmarkResult runCase(size_t ruleCount, size_t iterations,
     foreach (i; 0 .. 1000)
     {
         auto snapshot = model.prepare();
-        assert(snapshot.termCount == ruleCount);
+        assert(snapshot.termCount == uniqueTerms);
     }
     result.preparationNanos = preparationWatch.peek.total!"nsecs";
+    auto directPerEvaluation = cast(double) result.directNanos / iterations;
+    auto preparedPerEvaluation = cast(double) result.preparedNanos / iterations;
+    auto preparationCost = cast(double) result.preparationNanos / 1000.0;
+    result.breakEvenEvaluations = directPerEvaluation > preparedPerEvaluation ?
+        preparationCost / (directPerEvaluation - preparedPerEvaluation) : double.infinity;
     return result;
 }
 
@@ -162,10 +168,11 @@ void main()
         foreach (composite; [false, true])
         {
         auto result = runCase(spec[0], spec[1], family, composite);
-        writefln("family=%s shape=%s rules=%s iterations=%s trace_iterations=%s direct_ns=%s prepared_ns=%s trace_ns=%s prepare_1000_ns=%s",
+        writefln("family=%s shape=%s rules=%s iterations=%s trace_iterations=%s direct_ns=%s prepared_ns=%s trace_ns=%s prepare_1000_ns=%s break_even=%s",
             family, composite ? "binary" : "term",
             result.rules, result.iterations, result.traceIterations, result.directNanos,
-            result.preparedNanos, result.preparedTraceNanos, result.preparationNanos);
+            result.preparedNanos, result.preparedTraceNanos, result.preparationNanos,
+            result.breakEvenEvaluations);
         writefln("  sinks direct=%s prepared=%s",
             result.directSink, result.preparedSink);
         }
