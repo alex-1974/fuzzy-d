@@ -284,9 +284,27 @@ void runMultiOutputCase(size_t iterations)
     }
     auto preparedNanos = preparedWatch.peek.total!"nsecs";
     auto preparedAllocatedBytes = GC.allocatedInCurrentThread() - preparedAllocatedBefore;
-    writefln("multioutput iterations=%s allocating_ns=%s buffer_ns=%s prepared_ns=%s buffer_allocated_bytes=%s prepared_allocated_bytes=%s sinks=%s/%s/%s",
+    enum preparationRounds = 100;
+    auto preparationWatch = StopWatch(AutoStart.yes);
+    foreach (round; 0 .. preparationRounds)
+    {
+        auto rebuilt = new PreparedMultiOutputSugeno;
+        rebuilt.addOutput("heating");
+        rebuilt.addOutput("cooling");
+        foreach (i; 0 .. 20)
+            rebuilt.addRule("rule", expression, model, [cast(double)(i + 1), cast(double)(20 - i)]);
+        assert(rebuilt.ruleCount == 20);
+    }
+    auto preparationNanos = preparationWatch.peek.total!"nsecs";
+    auto directPerEvaluation = cast(double) bufferNanos / iterations;
+    auto preparedPerEvaluation = cast(double) preparedNanos / iterations;
+    auto preparationCost = cast(double) preparationNanos / preparationRounds;
+    auto breakEven = directPerEvaluation > preparedPerEvaluation ?
+        preparationCost / (directPerEvaluation - preparedPerEvaluation) : double.infinity;
+    writefln("multioutput iterations=%s allocating_ns=%s buffer_ns=%s prepared_ns=%s buffer_allocated_bytes=%s prepared_allocated_bytes=%s full_prepare_ns=%s break_even=%s sinks=%s/%s/%s",
         iterations, allocatingNanos, bufferNanos, preparedNanos, allocatedBytes,
-        preparedAllocatedBytes, allocatingSink, bufferSink, preparedSink);
+        preparedAllocatedBytes, preparationNanos, breakEven,
+        allocatingSink, bufferSink, preparedSink);
 }
 
 void main()
