@@ -59,6 +59,7 @@ Local commands:
 - [Release qualification](docs/release-qualification.md)
 - [Pre-0.1 API freeze audit](docs/api-freeze-audit.md)
 - [Toolchain support](docs/toolchain-support.md)
+- [0.1 migration note](docs/migration-0.1.md)
 - [Thermostat tutorial](docs/tutorial/thermostat.md)
 - [Consumer qualification boundary](docs/consumer-qualification.md)
 - [Contributing](CONTRIBUTING.md)

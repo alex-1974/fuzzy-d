@@ -14,5 +14,6 @@
   semantics.
 - Recorded the pre-0.1 public API freeze candidates and remaining compatibility
   decisions.
+- Added the intended pre-0.1 to 0.1 migration boundary and compatibility notes.
 
 No versioned release has been issued.
