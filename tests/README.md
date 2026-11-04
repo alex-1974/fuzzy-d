@@ -9,6 +9,10 @@ external public-API path. Future numerical tests should extend the shared
 conformance corpus rather than create independent semantics for each execution
 mode.
 
+Independent public-API consumers also cover sensor fusion
+(`tests/consumer-sensor`) and fan control (`tests/consumer-fan`). They are
+deliberately unrelated to GIS or OSM data.
+
 Run:
 
     dub test --compiler=dmd --force

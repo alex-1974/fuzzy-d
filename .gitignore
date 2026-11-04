@@ -19,3 +19,7 @@ docs/file_hashes.json
 tests/consumer/.dub/
 tests/consumer/fuzzy-consumer-smoke
 benchmarks/fuzzy-d-benchmarks
+.dub/
+tests/consumer/fuzzy-consumer-smoke
+tests/consumer-sensor/fuzzy-consumer-sensor
+tests/consumer-fan/fuzzy-consumer-fan
