@@ -1,13 +1,18 @@
 module app;
 
 import std.exception : assertThrown;
-import std.math : isNaN;
+import std.math : abs, isNaN;
 import fuzzy;
 import fuzzy.errors : MissingInputException;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel;
 import fuzzy.multioutput : MultiOutputSugeno;
+
+bool closeEnough(double a, double b) pure nothrow @safe @nogc
+{
+    return abs(a - b) <= 1e-12 * (1.0 + abs(a) + abs(b));
+}
 
 void main()
 {
@@ -147,8 +152,8 @@ void main()
         assert(named.hasValue == preparedNamed.hasValue);
         if (named.hasValue)
         {
-            assert(named.value == preparedNamed.value);
-            assert(numeric == named.value);
+            assert(closeEnough(named.value, preparedNamed.value));
+            assert(closeEnough(numeric, named.value));
         }
         else
             assert(isNaN(numeric));

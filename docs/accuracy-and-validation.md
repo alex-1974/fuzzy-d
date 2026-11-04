@@ -1,6 +1,6 @@
 # Accuracy and validation
 
-Status: validation plan, not measured evidence.
+Status: validation plan with initial measured consumer and benchmark evidence.
 
 ## Baseline
 
@@ -25,4 +25,7 @@ Report compiler versions, flags, CPU, dataset, iterations, and observed distribu
 
 ## Release
 
-No performance, attribute, CTFE or equivalence claims become release contracts until tests are run and recorded.
+No performance, attribute, CTFE or equivalence claims become release contracts
+until tests are run and recorded. The current release qualification commands
+and public API/threading assumptions are maintained in
+`docs/release-qualification.md`.
