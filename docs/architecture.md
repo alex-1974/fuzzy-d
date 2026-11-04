@@ -35,10 +35,19 @@ The repository now contains the first vertical slice of these paths:
 - explicit Gödel and product operator families across runtime, prepared and
   compile-time expression paths;
 - caller-owned `InputVector` values with an optional presence mask.
+- a named consumer facade plus an ordered numeric prepared path for repeated
+  fully-present evaluations;
+- benchmark evidence for preparation amortization and measured numeric-path
+  allocation behaviour.
 
 The current implementation is deliberately narrower than the final design. The
 editable model still accepts evaluator delegates, while the normalized graph is
 the intended boundary for later preparation and compile-time specialization.
+The numeric prepared path is allocation-free for the measured caller-owned
+workload, but this is not an unconditional `@nogc` contract: arbitrary user
+delegates and the exception-validating `Degree` constructor remain part of the
+runtime API. A future `@nogc` executor requires an explicitly separate trusted
+numeric representation.
 
 Rule data, normalization, diagnostics and supported operators must have one semantic authority. Do not let separate evaluators drift into independent fuzzy dialects.
 
