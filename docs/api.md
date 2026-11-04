@@ -81,6 +81,10 @@ or trace, and is intended for caller-owned numeric buffers. Use named
 `evaluate` when input sparsity, missing-input diagnostics or rule traces are
 needed.
 
+The consumer test suite contains a complete room-thermostat example with
+temperature error, temperature trend, multiple linguistic terms and prepared
+numeric evaluation.
+
 ## Advanced modules
 
 The following are intentionally not re-exported from the package root:

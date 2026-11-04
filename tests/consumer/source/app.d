@@ -88,4 +88,40 @@ void main()
         .then("risk", 1.0);
     auto hedgedResult = hedged.build().evaluate(inputs().set("temperature", 5.0));
     assert(hedgedResult.trace[0].activation.value == 0.25);
+
+    // Canonical consumer example: a two-input room thermostat.
+    auto thermostat = new FuzzyModelBuilder;
+    thermostat.input("temperatureError")
+        .term("cold", (double value) => risingRamp(0.0, 10.0)(value))
+        .term("comfortable", (double value) => triangle(-2.0, 0.0, 2.0)(value))
+        .term("hot", (double value) => fallingRamp(-10.0, 0.0)(value))
+        .input("temperatureTrend")
+        .term("falling", (double value) => fallingRamp(-5.0, 0.0)(value))
+        .term("stable", (double value) => triangle(-2.0, 0.0, 2.0)(value))
+        .term("rising", (double value) => risingRamp(0.0, 5.0)(value))
+        .output("heating")
+        .rule("cold and falling")
+        .whenAll("temperatureError", "cold", "temperatureTrend", "falling")
+        .then("heating", 1.0)
+        .rule("cold and stable")
+        .whenAll("temperatureError", "cold", "temperatureTrend", "stable")
+        .then("heating", 0.7)
+        .rule("comfortable")
+        .when("temperatureError", "comfortable")
+        .then("heating", 0.2)
+        .rule("hot")
+        .when("temperatureError", "hot")
+        .then("heating", 0.0);
+    auto thermostatModel = thermostat.build();
+    auto thermostatResult = thermostatModel.evaluate(
+        inputs().set("temperatureError", 5.0).set("temperatureTrend", -2.0));
+    assert(thermostatResult.hasValue);
+    assert(thermostatResult.output == "heating");
+    assert(thermostatResult.value > 0.0 && thermostatResult.value <= 1.0);
+    auto preparedThermostat = thermostatModel.prepare();
+    assert(preparedThermostat.inputCount == 2);
+    assert(preparedThermostat.inputName(0) == "temperatureError");
+    assert(preparedThermostat.inputName(1) == "temperatureTrend");
+    auto numericHeating = preparedThermostat.evaluateValue([5.0, -2.0]);
+    assert(numericHeating == thermostatResult.value);
 }

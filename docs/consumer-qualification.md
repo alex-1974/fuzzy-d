@@ -71,3 +71,8 @@ remaining easy to audit and compare across compilers. A future water-specific
 fixture should be admitted only after its semantics and expected outputs are
 stable enough for regression use.
 
+The repository's canonical consumer smoke test is a room thermostat with
+temperature error and temperature trend as inputs and heating power as a
+zero-order Sugeno output. It is intentionally independent of Dunia and water
+research.
+
