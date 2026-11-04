@@ -11,6 +11,8 @@ numeric facade path, which reuses a caller-owned ordered value buffer.
 The Dunia case also reports runtime GC bytes observed during the numeric loop;
 this is evidence for the selected workload, not a universal `@nogc` claim for
 user-supplied membership delegates.
+It also reports the cost of creating 1000 worker-local prepared facades; this
+is setup evidence, not per-evaluation latency.
 The thermostat case is the canonical general-purpose consumer workload used by
 the consumer smoke test and compares prepared named versus prepared numeric
 evaluation.

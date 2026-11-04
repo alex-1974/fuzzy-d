@@ -138,6 +138,13 @@ void runDuniaCase(size_t iterations)
         .then("risk", 1.0);
     auto model = builder.build();
     auto prepared = model.prepare();
+    auto cloneWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. 1000)
+    {
+        auto worker = prepared.cloneForWorker;
+        assert(worker.inputCount == prepared.inputCount);
+    }
+    auto cloneNanos = cloneWatch.peek.total!"nsecs";
     double directSink = 0.0;
     double preparedSink = 0.0;
     auto directWatch = StopWatch(AutoStart.yes);
@@ -171,8 +178,12 @@ void runDuniaCase(size_t iterations)
     }
     auto numericNanos = numericWatch.peek.total!"nsecs";
     auto allocatedBytes = GC.allocatedInCurrentThread() - allocatedBefore;
-    writefln("dunia facade iterations=%s direct_ns=%s prepared_named_ns=%s prepared_numeric_ns=%s numeric_allocated_bytes=%s sinks=%s/%s/%s",
-        iterations, directNanos, preparedNanos, numericNanos,
+    auto worker = prepared.cloneForWorker;
+    auto workerValue = worker.evaluateValue([50.0, 50.0]);
+    auto sharedValue = prepared.evaluateValue([50.0, 50.0]);
+    assert(workerValue == sharedValue);
+    writefln("dunia facade iterations=%s clone_1000_ns=%s direct_ns=%s prepared_named_ns=%s prepared_numeric_ns=%s numeric_allocated_bytes=%s sinks=%s/%s/%s",
+        iterations, cloneNanos, directNanos, preparedNanos, numericNanos,
         allocatedBytes, directSink, preparedSink, numericSink);
 }
 
