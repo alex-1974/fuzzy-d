@@ -11,6 +11,7 @@ import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel, TermId;
 import fuzzy.operators : OperatorFamily;
 import fuzzy.facade : FuzzyModelBuilder, inputs;
+import fuzzy.multioutput : MultiOutputSugeno;
 
 struct BenchmarkResult
 {
@@ -229,6 +230,46 @@ void runThermostatCase(size_t iterations)
         iterations, namedNanos, numericNanos, namedSink, numericSink);
 }
 
+void runMultiOutputCase(size_t iterations)
+{
+    auto model = new EditableModel;
+    auto x = model.addVariable("x");
+    auto shape = risingRamp(0.0, 1.0);
+    auto term = model.addTerm(x, "active", (double value) => shape(value));
+    NormalizedExpression expression;
+    expression.setRoot(expression.addTerm(term));
+    auto rules = new MultiOutputSugeno;
+    rules.addOutput("heating");
+    rules.addOutput("cooling");
+    foreach (i; 0 .. 20)
+        rules.addRule("rule", expression, [cast(double)(i + 1), cast(double)(20 - i)]);
+
+    double allocatingSink = 0.0;
+    auto input = [0.0];
+    auto allocatingWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. iterations)
+    {
+        input[0] = cast(double)(i % 100) / 100.0;
+        auto result = rules.evaluate(model, input);
+        if (result.hasValue) allocatingSink += result.values[0] + result.values[1];
+    }
+    auto allocatingNanos = allocatingWatch.peek.total!"nsecs";
+    double bufferSink = 0.0;
+    auto buffer = [0.0, 0.0];
+    auto allocatedBefore = GC.allocatedInCurrentThread();
+    auto bufferWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. iterations)
+    {
+        input[0] = cast(double)(i % 100) / 100.0;
+        if (rules.evaluateInto(model, input, buffer))
+            bufferSink += buffer[0] + buffer[1];
+    }
+    auto bufferNanos = bufferWatch.peek.total!"nsecs";
+    auto allocatedBytes = GC.allocatedInCurrentThread() - allocatedBefore;
+    writefln("multioutput iterations=%s allocating_ns=%s buffer_ns=%s buffer_allocated_bytes=%s sinks=%s/%s",
+        iterations, allocatingNanos, bufferNanos, allocatedBytes, allocatingSink, bufferSink);
+}
+
 void main()
 {
     foreach (spec; [[10UL, 100_000UL], [100UL, 100_000UL], [1000UL, 10_000UL]])
@@ -249,4 +290,5 @@ void main()
     }
     runDuniaCase(100_000);
     runThermostatCase(100_000);
+    runMultiOutputCase(100_000);
 }

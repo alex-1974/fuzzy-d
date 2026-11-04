@@ -14,6 +14,8 @@ user-supplied membership delegates.
 The thermostat case is the canonical general-purpose consumer workload used by
 the consumer smoke test and compares prepared named versus prepared numeric
 evaluation.
+The multi-output case compares allocation-producing result vectors with
+`evaluateInto` and its caller-owned output buffer.
 The prepared fast path is intended for fully present numeric inputs; callers
 that need missing-input detection or rule traces use the regular `evaluate`
 overload.
