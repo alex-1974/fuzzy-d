@@ -4,6 +4,7 @@ import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.conv : to;
 import std.math : isNaN;
 import std.stdio : writefln;
+import core.memory : GC;
 import fuzzy;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
@@ -136,8 +137,9 @@ void runDuniaCase(size_t iterations)
     }
     auto preparedNanos = preparedWatch.peek.total!"nsecs";
     double numericSink = 0.0;
-    auto numericWatch = StopWatch(AutoStart.yes);
     auto numericInput = [0.0, 0.0];
+    auto allocatedBefore = GC.allocatedInCurrentThread();
+    auto numericWatch = StopWatch(AutoStart.yes);
     foreach (i; 0 .. iterations)
     {
         numericInput[0] = cast(double)(i % 100);
@@ -146,9 +148,10 @@ void runDuniaCase(size_t iterations)
         if (!isNaN(value)) numericSink += value;
     }
     auto numericNanos = numericWatch.peek.total!"nsecs";
-    writefln("dunia facade iterations=%s direct_ns=%s prepared_named_ns=%s prepared_numeric_ns=%s sinks=%s/%s/%s",
+    auto allocatedBytes = GC.allocatedInCurrentThread() - allocatedBefore;
+    writefln("dunia facade iterations=%s direct_ns=%s prepared_named_ns=%s prepared_numeric_ns=%s numeric_allocated_bytes=%s sinks=%s/%s/%s",
         iterations, directNanos, preparedNanos, numericNanos,
-        directSink, preparedSink, numericSink);
+        allocatedBytes, directSink, preparedSink, numericSink);
 }
 
 void main()

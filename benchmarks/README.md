@@ -8,6 +8,9 @@ It also includes a small named-input facade case representative of Dunia's
 consumer style; this measures the complete convenience API, including input
 mapping and result/trace construction. The same case reports the prepared
 numeric facade path, which reuses a caller-owned ordered value buffer.
+The Dunia case also reports runtime GC bytes observed during the numeric loop;
+this is evidence for the selected workload, not a universal `@nogc` claim for
+user-supplied membership delegates.
 The prepared fast path is intended for fully present numeric inputs; callers
 that need missing-input detection or rule traces use the regular `evaluate`
 overload.
