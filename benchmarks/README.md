@@ -4,6 +4,9 @@ This development harness compares direct expression evaluation with prepared
 evaluation at 10, 100 and 1000 rules. It covers single-term and two-term
 antecedents under both Gödel and Product operators. The repeated-term workload
 exercises the prepared plan's term-value cache.
+It also includes a small named-input facade case representative of Dunia's
+consumer style; this measures the complete convenience API, including input
+mapping and result/trace construction.
 The prepared fast path is intended for fully present numeric inputs; callers
 that need missing-input detection or rule traces use the regular `evaluate`
 overload.

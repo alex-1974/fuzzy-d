@@ -9,6 +9,7 @@ import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel, TermId;
 import fuzzy.operators : OperatorFamily;
+import fuzzy.facade : FuzzyModelBuilder, inputs;
 
 struct BenchmarkResult
 {
@@ -100,6 +101,44 @@ BenchmarkResult runCase(size_t ruleCount, size_t iterations,
     return result;
 }
 
+void runDuniaCase(size_t iterations)
+{
+    auto shape = risingRamp(0.0, 100.0);
+    auto builder = new FuzzyModelBuilder;
+    builder.input("temperature")
+        .term("high", (double value) => shape(value))
+        .input("load")
+        .term("high", (double value) => shape(value))
+        .output("risk")
+        .rule("temperature and load")
+        .whenAll("temperature", "high", "load", "high")
+        .then("risk", 1.0);
+    auto model = builder.build();
+    auto prepared = model.prepare();
+    double directSink = 0.0;
+    double preparedSink = 0.0;
+    auto directWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. iterations)
+    {
+        auto value = model.evaluate(inputs()
+            .set("temperature", cast(double)(i % 100))
+            .set("load", cast(double)((i * 3) % 100))).value;
+        if (!isNaN(value)) directSink += value;
+    }
+    auto directNanos = directWatch.peek.total!"nsecs";
+    auto preparedWatch = StopWatch(AutoStart.yes);
+    foreach (i; 0 .. iterations)
+    {
+        auto value = prepared.evaluate(inputs()
+            .set("temperature", cast(double)(i % 100))
+            .set("load", cast(double)((i * 3) % 100))).value;
+        if (!isNaN(value)) preparedSink += value;
+    }
+    auto preparedNanos = preparedWatch.peek.total!"nsecs";
+    writefln("dunia facade iterations=%s direct_ns=%s prepared_ns=%s sinks=%s/%s",
+        iterations, directNanos, preparedNanos, directSink, preparedSink);
+}
+
 void main()
 {
     foreach (spec; [[10UL, 100_000UL], [100UL, 100_000UL], [1000UL, 10_000UL]])
@@ -116,4 +155,5 @@ void main()
             result.directSink, result.preparedSink);
         }
     }
+    runDuniaCase(100_000);
 }
