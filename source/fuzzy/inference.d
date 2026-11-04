@@ -225,6 +225,13 @@ final class PreparedZeroOrderSugeno
         double numerator = 0.0;
         double denominator = 0.0;
         ++generation;
+        if (generation == 0)
+        {
+            // Avoid mistaking a previous cache epoch for the current one
+            // after size_t wraps in a long-lived process.
+            termCacheGeneration[] = 0;
+            generation = 1;
+        }
         foreach (rule; rules)
         {
             double activation;
