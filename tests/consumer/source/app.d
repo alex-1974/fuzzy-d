@@ -45,6 +45,10 @@ void main()
     assert(friendlyResult.output == "risk");
     assert(friendlyResult.value == 0.9);
     assert(friendly.prepare().evaluate(inputs().set("level", 5.0)).value == 0.9);
+    auto preparedFriendly = friendly.prepare();
+    assert(preparedFriendly.inputCount == 1);
+    assert(preparedFriendly.inputName(0) == "level");
+    assert(preparedFriendly.evaluateValue([5.0]) == 0.9);
 
     auto combinedShape = risingRamp(0.0, 10.0);
     auto combined = new FuzzyModelBuilder;

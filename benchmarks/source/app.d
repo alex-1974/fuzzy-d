@@ -135,8 +135,20 @@ void runDuniaCase(size_t iterations)
         if (!isNaN(value)) preparedSink += value;
     }
     auto preparedNanos = preparedWatch.peek.total!"nsecs";
-    writefln("dunia facade iterations=%s direct_ns=%s prepared_ns=%s sinks=%s/%s",
-        iterations, directNanos, preparedNanos, directSink, preparedSink);
+    double numericSink = 0.0;
+    auto numericWatch = StopWatch(AutoStart.yes);
+    auto numericInput = [0.0, 0.0];
+    foreach (i; 0 .. iterations)
+    {
+        numericInput[0] = cast(double)(i % 100);
+        numericInput[1] = cast(double)((i * 3) % 100);
+        auto value = prepared.evaluateValue(numericInput);
+        if (!isNaN(value)) numericSink += value;
+    }
+    auto numericNanos = numericWatch.peek.total!"nsecs";
+    writefln("dunia facade iterations=%s direct_ns=%s prepared_named_ns=%s prepared_numeric_ns=%s sinks=%s/%s/%s",
+        iterations, directNanos, preparedNanos, numericNanos,
+        directSink, preparedSink, numericSink);
 }
 
 void main()

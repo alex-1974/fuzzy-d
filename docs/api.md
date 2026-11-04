@@ -67,6 +67,20 @@ foreach (trace; result.trace)
 No activated rule is not treated as a valid numeric zero. Missing inputs raise
 `MissingInputException` when they are required by an expression.
 
+For a repeated production hot path, prepare the model once and pass values in
+declaration order:
+
+```d
+auto prepared = model.build().prepare();
+assert(prepared.inputName(0) == "temperature");
+auto risk = prepared.evaluateValue([8.0]);
+```
+
+`evaluateValue` assumes all inputs are present, constructs no named-input map
+or trace, and is intended for caller-owned numeric buffers. Use named
+`evaluate` when input sparsity, missing-input diagnostics or rule traces are
+needed.
+
 ## Advanced modules
 
 The following are intentionally not re-exported from the package root:

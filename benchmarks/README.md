@@ -6,7 +6,8 @@ antecedents under both Gödel and Product operators. The repeated-term workload
 exercises the prepared plan's term-value cache.
 It also includes a small named-input facade case representative of Dunia's
 consumer style; this measures the complete convenience API, including input
-mapping and result/trace construction.
+mapping and result/trace construction. The same case reports the prepared
+numeric facade path, which reuses a caller-owned ordered value buffer.
 The prepared fast path is intended for fully present numeric inputs; callers
 that need missing-input detection or rule traces use the regular `evaluate`
 overload.

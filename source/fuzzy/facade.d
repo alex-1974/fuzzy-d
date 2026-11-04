@@ -134,6 +134,29 @@ final class PreparedFuzzyModel
         }
         return NamedResult(rules.evaluate(model, InputVector(values, present)), outputName);
     }
+
+    /**
+     * Evaluate the prepared model on caller-owned, fully present values.
+     * Values follow the declaration order exposed by `inputName` and no
+     * named-input map or rule trace is constructed.
+     */
+    double evaluateValue(const double[] values)
+    {
+        enforce(values.length == variableIds.length,
+            "numeric input count does not match prepared model");
+        return rules.evaluateValue(model, values);
+    }
+
+    @property size_t inputCount() const pure nothrow @safe @nogc
+    {
+        return variableNames.length;
+    }
+
+    string inputName(size_t index) const
+    {
+        enforce(index < variableNames.length, "prepared input index is invalid");
+        return variableNames[index];
+    }
 }
 
 /** Fluent builder for the human-facing Type-1 model API. */
