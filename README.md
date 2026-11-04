@@ -6,13 +6,18 @@ Reusable fuzzy-logic foundations and inference for the D programming language.
 
 ## Purpose
 
-Build and evaluate fuzzy sets and rules using one coherent semantic model, with two future execution paths:
+Build and evaluate fuzzy sets and rules using one coherent semantic model, with
+editable, prepared and compile-time execution paths:
 
 - Editable rules and membership functions at runtime, including model inspection and experimentation.
-- Prepared runtime evaluation with reusable, allocation-conscious execution plans.
+- Prepared runtime evaluation with reusable, allocation-conscious execution plans,
+  ordered numeric hot paths and worker-local clones.
 - Compile-time specialization of the same validated model for fixed production rule sets.
+- Advanced multi-output Sugeno evaluation with caller-owned result buffers.
 
-The initial consumer is a plausibility validator for OpenStreetMap data, but this library has no GIS or OSM dependencies.
+The canonical general-purpose consumer is a room thermostat. Dunia and water-
+uncertainty research remain future domain consumers; this library has no GIS or
+OSM dependencies.
 
 ## Getting started
 
@@ -49,6 +54,9 @@ Local commands:
 - [Architecture and boundaries](docs/architecture.md)
 - [Consumer API](docs/api.md)
 - [Accuracy and validation plan](docs/accuracy-and-validation.md)
+- [Release qualification](docs/release-qualification.md)
+- [Thermostat tutorial](docs/tutorial/thermostat.md)
+- [Consumer qualification boundary](docs/consumer-qualification.md)
 - [Contributing](CONTRIBUTING.md)
 
 The same normalized expression can be prepared for repeated evaluation or
