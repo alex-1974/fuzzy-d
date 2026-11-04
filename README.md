@@ -1,31 +1,34 @@
 # fuzzy-d
 
-Reusable fuzzy-logic foundations and inference for the D programming language.
+fuzzy-d helps a D program turn imprecise measurements into understandable
+decisions. You describe concepts such as “cold”, “comfortable” or “rising”,
+combine them with readable rules, and receive a numeric result together with
+optional rule explanations.
 
 > Status: pre-release Type-1 core. No published release exists yet; the API is still subject to change.
 
-## Purpose
+## What it does
 
-Build and evaluate fuzzy sets and rules using one coherent semantic model, with
-editable, prepared and compile-time execution paths:
+The library supports the same model from experimentation through a repeated
+production loop:
 
-- Editable rules and membership functions at runtime, including model inspection and experimentation.
-- Prepared runtime evaluation with reusable, allocation-conscious execution plans,
-  ordered numeric hot paths and worker-local clones.
-- Compile-time specialization of the same validated model for fixed production rule sets.
-- Advanced multi-output Sugeno evaluation with caller-owned result buffers.
+- Define membership concepts with triangles, trapezoids, ramps, Gaussians and
+  related shapes.
+- Write readable rules such as “if the temperature is cold, increase heating”.
+- Evaluate by names while handling missing measurements explicitly.
+- Prepare a model once for a fast repeated loop and use worker-local copies for
+  parallel workers.
+- Use compile-time models when a rule set is fixed in the program.
 
 The canonical general-purpose consumer is a room thermostat. Dunia and water-
 uncertainty research remain future domain consumers; this library has no GIS or
 OSM dependencies.
 
-## Getting started
+## A small example
 
-The current pre-release core provides validated Type-1 degrees, membership functions, linguistic hedges, selectable basic operators, structured antecedent expressions, editable terms, normalized expressions and prepared zero-order Sugeno evaluation. The public API is still evolving and is not release-stable.
+This example describes a simple risk decision from a temperature measurement:
 
     import fuzzy;
-    static assert(fuzzyDevelopmentStatus == "pre-0.1");
-
     auto cold = triangle(0.0, 10.0, 20.0);
     assert(cold(10.0).value == 1.0);
 
@@ -41,6 +44,27 @@ The current pre-release core provides validated Type-1 degrees, membership funct
     auto result = model.evaluate(inputs().set("temperature", 10.0));
     assert(result.hasValue);
     assert(result.output == "risk");
+
+For a complete two-input example, see the [room thermostat tutorial](docs/tutorial/thermostat.md).
+
+## When to prepare
+
+Use the named form when inputs arrive as a sparse record or when you need rule
+traces for diagnostics. If the model is evaluated repeatedly with all inputs
+present, prepare it once and pass values in the declaration order:
+
+    auto prepared = model.prepare();
+    auto heating = prepared.evaluateValue([5.0, -2.0]);
+
+The prepared numeric path is intended for the hot loop. It does not silently
+turn missing values into zero; use named evaluation when missingness matters.
+
+## Scope
+
+fuzzy-d currently focuses on Type-1 fuzzy sets and zero-order Sugeno inference.
+Multi-output evaluation and compile-time fixed models are available for advanced
+uses. Mamdani inference, defuzzification and learning are not yet part of the
+stable API.
 
 Local commands:
 
@@ -69,9 +93,8 @@ Or run the non-Ddoc qualification gates together:
 - [Consumer qualification boundary](docs/consumer-qualification.md)
 - [Contributing](CONTRIBUTING.md)
 
-The same normalized expression can be prepared for repeated evaluation or
-specialized at compile time. Missing inputs use an explicit presence mask via
-`InputVector`; a missing value is never silently converted to zero.
+The [consumer API guide](docs/api.md) explains named inputs, preparation and
+diagnostic traces. Missing measurements are always handled explicitly.
 
 Development follows d-geospatial-workspace engineering practices when the canonical workspace documents are available locally. The repository remains independently buildable outside that workspace.
 
