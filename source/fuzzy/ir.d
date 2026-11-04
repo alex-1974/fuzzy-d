@@ -94,6 +94,11 @@ struct NormalizedExpression
         prepared.nodes = nodes.dup;
         prepared.root = root;
         prepared.operatorFamily = operatorFamily;
+        if (nodes[root].kind == ExpressionKind.term)
+        {
+            prepared.singleTerm = true;
+            prepared.rootTerm = nodes[root].term;
+        }
         return prepared;
     }
 
@@ -101,7 +106,28 @@ struct NormalizedExpression
     PreparedExpression prepare(const EditableModel model) const
     {
         validate(model);
-        return prepare();
+        auto prepared = prepare();
+        if (prepared.singleTerm)
+        {
+            auto term = model.term(prepared.rootTerm);
+            prepared.boundVariable = term.variable;
+            prepared.boundEvaluator = term.evaluator;
+            prepared.bound = true;
+        }
+        prepared.boundEvaluators = new Degree delegate(double)[nodes.length];
+        prepared.boundVariables = new VariableId[nodes.length];
+        prepared.boundNodes = new bool[nodes.length];
+        foreach (i, node; nodes)
+        {
+            if (node.kind == ExpressionKind.term)
+            {
+                auto term = model.term(node.term);
+                prepared.boundEvaluators[i] = term.evaluator;
+                prepared.boundVariables[i] = term.variable;
+                prepared.boundNodes[i] = true;
+            }
+        }
+        return prepared;
     }
 
     /** Validate all structural and term references before evaluation. */
@@ -187,10 +213,38 @@ struct PreparedExpression
     private ExpressionNode[] nodes;
     private size_t root = size_t.max;
     private OperatorFamily operatorFamily = OperatorFamily.godel;
+    private bool singleTerm;
+    private TermId rootTerm;
+    private VariableId boundVariable;
+    private Degree delegate(double) boundEvaluator;
+    private bool bound;
+    private Degree delegate(double)[] boundEvaluators;
+    private VariableId[] boundVariables;
+    private bool[] boundNodes;
 
     @property OperatorFamily operators() const pure nothrow @safe @nogc
     {
         return operatorFamily;
+    }
+
+    @property bool hasBoundSingleTerm() const pure nothrow @safe @nogc
+    {
+        return bound;
+    }
+
+    @property VariableId boundVariableId() const pure nothrow @safe @nogc
+    {
+        return boundVariable;
+    }
+
+    @property TermId boundTermId() const pure nothrow @safe @nogc
+    {
+        return rootTerm;
+    }
+
+    @property Degree delegate(double) boundTermEvaluator() const
+    {
+        return boundEvaluator;
     }
 
     Degree evaluate(const EditableModel model, const double[] inputs) const
@@ -206,6 +260,19 @@ struct PreparedExpression
     Degree evaluate(const PreparedModel model, const InputVector inputs) const
     {
         enforce(root != size_t.max, "prepared expression has no root");
+        if (singleTerm && bound)
+        {
+            if (!inputs.available(boundVariable))
+                throw new MissingInputException("input value is missing for term variable");
+            return boundEvaluator(inputs.value(boundVariable));
+        }
+        if (singleTerm)
+        {
+            auto term = model.term(rootTerm);
+            if (!inputs.available(term.variable))
+                throw new MissingInputException("input value is missing for term variable");
+            return term(inputs.value(term.variable));
+        }
         return evaluateNode(model, inputs, root);
     }
 
@@ -224,6 +291,12 @@ struct PreparedExpression
         final switch (node.kind)
         {
             case ExpressionKind.term:
+                if (boundNodes.length != 0 && boundNodes[index])
+                {
+                    if (!inputs.available(boundVariables[index]))
+                        throw new MissingInputException("input value is missing for term variable");
+                    return boundEvaluators[index](inputs.value(boundVariables[index]));
+                }
                 auto term = model.term(node.term);
                 if (!inputs.available(term.variable))
                     throw new MissingInputException("input value is missing for term variable");

@@ -2,15 +2,25 @@ module benchmark_app;
 
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.conv : to;
+import std.math : isNaN;
 import std.stdio : writefln;
 import fuzzy;
 import fuzzy.inference : ExpressionZeroOrderSugeno, PreparedZeroOrderSugeno;
 import fuzzy.ir : NormalizedExpression;
 import fuzzy.model : EditableModel;
 
-enum iterations = 100_000;
+struct BenchmarkResult
+{
+    size_t rules;
+    size_t iterations;
+    long directNanos;
+    long preparedNanos;
+    long preparationNanos;
+    double directSink = 0.0;
+    double preparedSink = 0.0;
+}
 
-void main()
+BenchmarkResult runCase(size_t ruleCount, size_t iterations)
 {
     auto model = new EditableModel;
     auto x = model.addVariable("x");
@@ -18,50 +28,66 @@ void main()
     auto direct = new ExpressionZeroOrderSugeno;
     auto prepared = new PreparedZeroOrderSugeno;
 
-    foreach (i; 0 .. 100)
+    NormalizedExpression[] expressions;
+    auto uniqueTerms = ruleCount / 2 + ruleCount % 2;
+    foreach (i; 0 .. uniqueTerms)
     {
         auto term = model.addTerm(x, "term" ~ to!string(i),
             (double value) => shape(value));
         NormalizedExpression expression;
         expression.setRoot(expression.addTerm(term));
+        expressions ~= expression;
+    }
+    foreach (i; 0 .. ruleCount)
+    {
+        auto expression = expressions[i % uniqueTerms];
         direct.addRule("rule", expression, i);
         prepared.addRule("rule", expression, model, i);
     }
 
     auto input = [0.0];
+    BenchmarkResult result;
+    result.rules = ruleCount;
+    result.iterations = iterations;
 
-    double directSink = 0.0;
     auto directWatch = StopWatch(AutoStart.yes);
     foreach (i; 0 .. iterations)
     {
         input[0] = cast(double)(i % 99 + 1) / 100.0;
-        auto result = direct.evaluate(model, input);
-        if (result.hasValue) directSink += result.value;
+        auto value = direct.evaluateValue(model, input);
+        if (!isNaN(value)) result.directSink += value;
     }
-    auto directNanos = directWatch.peek.total!"nsecs";
+    result.directNanos = directWatch.peek.total!"nsecs";
 
-    double preparedSink = 0.0;
     auto preparedModel = model.prepare();
     auto preparedWatch = StopWatch(AutoStart.yes);
     foreach (i; 0 .. iterations)
     {
         input[0] = cast(double)(i % 99 + 1) / 100.0;
-        auto result = prepared.evaluate(preparedModel, input);
-        if (result.hasValue) preparedSink += result.value;
+        auto value = prepared.evaluateValue(preparedModel, input);
+        if (!isNaN(value)) result.preparedSink += value;
     }
-    auto preparedNanos = preparedWatch.peek.total!"nsecs";
+    result.preparedNanos = preparedWatch.peek.total!"nsecs";
 
     auto preparationWatch = StopWatch(AutoStart.yes);
     foreach (i; 0 .. 1000)
     {
         auto snapshot = model.prepare();
-        // Keep the snapshot observable without including it in evaluation timing.
-        assert(snapshot.termCount == 100);
+        assert(snapshot.termCount == ruleCount);
     }
-    auto preparationNanos = preparationWatch.peek.total!"nsecs";
+    result.preparationNanos = preparationWatch.peek.total!"nsecs";
+    return result;
+}
 
-    writefln("rules=%s iterations=%s", 100, iterations);
-    writefln("direct_ns=%s sink=%s", directNanos, directSink);
-    writefln("prepared_ns=%s sink=%s", preparedNanos, preparedSink);
-    writefln("prepare_1000_ns=%s", preparationNanos);
+void main()
+{
+    foreach (spec; [[10UL, 100_000UL], [100UL, 100_000UL], [1000UL, 10_000UL]])
+    {
+        auto result = runCase(spec[0], spec[1]);
+        writefln("rules=%s iterations=%s direct_ns=%s prepared_ns=%s prepare_1000_ns=%s",
+            result.rules, result.iterations, result.directNanos,
+            result.preparedNanos, result.preparationNanos);
+        writefln("  sinks direct=%s prepared=%s",
+            result.directSink, result.preparedSink);
+    }
 }

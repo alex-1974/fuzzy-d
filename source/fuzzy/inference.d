@@ -4,7 +4,7 @@ import std.exception : enforce;
 import std.math : isNaN;
 import fuzzy.degree : Degree;
 import fuzzy.ir : NormalizedExpression, PreparedExpression;
-import fuzzy.model : EditableModel, InputVector, PreparedModel;
+import fuzzy.model : EditableModel, InputVector, PreparedModel, VariableId, TermId;
 
 /** Stable identifier of a rule within one rule set. */
 struct RuleId
@@ -92,12 +92,19 @@ struct PreparedSugenoRule
     string name;
     PreparedExpression antecedent;
     double consequent;
+    bool directTerm;
+    VariableId variable;
+    Degree delegate(double) evaluator;
+    TermId termId;
 }
 
 /** Reusable prepared Sugeno evaluator. */
 final class PreparedZeroOrderSugeno
 {
     private PreparedSugenoRule[] rules;
+    private double[] termCache;
+    private size_t[] termCacheGeneration;
+    private size_t generation;
 
     RuleId addRule(string name, PreparedExpression antecedent, double consequent)
     {
@@ -109,6 +116,18 @@ final class PreparedZeroOrderSugeno
         rule.name = name;
         rule.antecedent = antecedent;
         rule.consequent = consequent;
+        if (antecedent.hasBoundSingleTerm)
+        {
+            rule.directTerm = true;
+            rule.variable = antecedent.boundVariableId;
+            rule.evaluator = antecedent.boundTermEvaluator;
+            rule.termId = antecedent.boundTermId;
+            if (termCache.length <= rule.termId.value)
+            {
+                termCache.length = rule.termId.value + 1;
+                termCacheGeneration.length = rule.termId.value + 1;
+            }
+        }
         rules ~= rule;
         return id;
     }
@@ -164,6 +183,32 @@ final class PreparedZeroOrderSugeno
         result.hasValue = true;
         return result;
     }
+
+    /** Prepared evaluation without trace construction. */
+    double evaluateValue(const PreparedModel model, const double[] inputs)
+    {
+        double numerator = 0.0;
+        double denominator = 0.0;
+        ++generation;
+        foreach (rule; rules)
+        {
+            double activation;
+            if (rule.directTerm)
+            {
+                if (termCacheGeneration[rule.termId.value] != generation)
+                {
+                    termCache[rule.termId.value] = rule.evaluator(inputs[rule.variable.value]).value;
+                    termCacheGeneration[rule.termId.value] = generation;
+                }
+                activation = termCache[rule.termId.value];
+            }
+            else
+                activation = rule.antecedent.evaluate(model, inputs).value;
+            numerator += activation * rule.consequent;
+            denominator += activation;
+        }
+        return denominator == 0.0 ? double.nan : numerator / denominator;
+    }
 }
 
 /** Runtime rule using the normalized expression API instead of a delegate. */
@@ -217,6 +262,20 @@ final class ExpressionZeroOrderSugeno
         result.value /= result.totalActivation;
         result.hasValue = true;
         return result;
+    }
+
+    /** Evaluate without allocating or collecting a rule trace. */
+    double evaluateValue(const EditableModel model, const double[] inputs) const
+    {
+        double numerator = 0.0;
+        double denominator = 0.0;
+        foreach (rule; rules)
+        {
+            auto activation = rule.antecedent.evaluate(model, inputs).value;
+            numerator += activation * rule.consequent;
+            denominator += activation;
+        }
+        return denominator == 0.0 ? double.nan : numerator / denominator;
     }
 
     @property size_t ruleCount() const pure nothrow @safe @nogc { return rules.length; }
