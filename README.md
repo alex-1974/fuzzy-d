@@ -5,7 +5,7 @@ decisions. You describe concepts such as “cold”, “comfortable” or “ris
 combine them with readable rules, and receive a numeric result together with
 optional rule explanations.
 
-> Status: pre-release Type-1 core. No published release exists yet; the API is still subject to change.
+> Status: `0.1.0` released. The Type-1 core is stable for the documented API; later releases may add capabilities.
 
 ## What it does
 

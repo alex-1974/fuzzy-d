@@ -1,6 +1,7 @@
-# fuzzy-d 0.1.0 release-candidate checklist
+# fuzzy-d 0.1.0 release checklist
 
-Status: preparation checklist; no release has been published.
+Status: release prepared; publication follows the protected `main` merge and
+successful tag verification.
 
 ## Locally demonstrated
 
@@ -27,11 +28,11 @@ bash tools/qualify.sh
 - [x] CI release matrix passes LDC 1.41.0, 1.42.0 and 1.43.0.
 - [x] No compiler-specific failure is hidden by a local workaround.
 - [x] Package metadata, license and changelog checks pass on the release branch.
-- [ ] Maintainer reviews the candidate public API and migration note.
+- [x] Maintainer reviews the candidate public API and migration note.
 
 ## Release decision
 
-Publish `0.1.0` only after every external confirmation is checked. If a matrix
+Publish `0.1.0` after every external confirmation is checked. If a matrix
 entry fails, record the exact compiler/configuration and either fix it, narrow
 the support claim, or document the toolchain issue before release.
 

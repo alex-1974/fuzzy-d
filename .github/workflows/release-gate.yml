@@ -49,6 +49,10 @@ jobs:
         run: dub test --compiler="$DC" --force
       - name: External consumer smoke
         run: dub run --root=tests/consumer --compiler="$DC" --force
+      - name: Independent consumer smoke
+        run: |
+          dub run --root=tests/consumer-sensor --compiler="$DC" --force
+          dub run --root=tests/consumer-fan --compiler="$DC" --force
       - name: Release build
         run: dub build --build=release --compiler="$DC" --force
       - name: Representative benchmarks
