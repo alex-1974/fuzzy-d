@@ -42,6 +42,7 @@ final class MultiOutputSugeno
     private OutputDefinition[] outputs;
     private MultiOutputRule[] rules;
 
+    /** Add a named output and return its stable position in result vectors. */
     OutputId addOutput(string name)
     {
         enforce(name.length != 0, "output name must not be empty");
@@ -52,6 +53,7 @@ final class MultiOutputSugeno
         return id;
     }
 
+    /** Add an editable rule with one constant consequent per output. */
     void addRule(string name, NormalizedExpression antecedent, double[] consequents)
     {
         enforce(name.length != 0, "multi-output rule name must not be empty");
@@ -64,6 +66,7 @@ final class MultiOutputSugeno
         rules ~= rule;
     }
 
+    /** Evaluate and allocate a result vector for the current output set. */
     MultiOutputResult evaluate(const EditableModel model, const double[] inputs) const
     {
         MultiOutputResult result;
@@ -126,6 +129,7 @@ final class PreparedMultiOutputSugeno
     private OutputDefinition[] outputs;
     private PreparedMultiOutputRule[] rules;
 
+    /** Add a named output before prepared rules are registered. */
     OutputId addOutput(string name)
     {
         enforce(name.length != 0, "prepared output name must not be empty");
@@ -136,6 +140,7 @@ final class PreparedMultiOutputSugeno
         return id;
     }
 
+    /** Validate and bind an editable antecedent to a prepared model. */
     void addRule(string name, NormalizedExpression antecedent,
                  const EditableModel model, const double[] consequents)
     {
@@ -148,6 +153,7 @@ final class PreparedMultiOutputSugeno
         rules ~= rule;
     }
 
+    /** Evaluate fully present inputs into caller-owned output storage. */
     bool evaluateInto(const PreparedModel model, const double[] inputs,
                       double[] outputs) const
     {

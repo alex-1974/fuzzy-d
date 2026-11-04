@@ -14,6 +14,7 @@ struct InputValues
     private double[string] values;
     private bool[string] present;
 
+    /** Return a copy with a present named value. */
     InputValues set(string name, double value)
     {
         auto result = this;
@@ -22,6 +23,7 @@ struct InputValues
         return result;
     }
 
+    /** Return a copy marking a named input as unavailable. */
     InputValues missing(string name)
     {
         auto result = this;
@@ -70,6 +72,7 @@ final class FuzzyModel
         this.consequents = consequents;
     }
 
+    /** Evaluate named inputs, retaining diagnostics and rule traces. */
     NamedResult evaluate(InputValues input) const
     {
         double[] values = new double[variableIds.length];
@@ -120,6 +123,7 @@ final class PreparedFuzzyModel
         this.variableNames = variableNames;
     }
 
+    /** Evaluate named inputs against this prepared model. */
     NamedResult evaluate(InputValues input) const
     {
         double[] values = new double[variableIds.length];
@@ -154,11 +158,13 @@ final class PreparedFuzzyModel
             variableIds.dup, variableNames.dup);
     }
 
+    /** Number of numeric inputs expected by `evaluateValue`. */
     @property size_t inputCount() const pure nothrow @safe @nogc
     {
         return variableNames.length;
     }
 
+    /** Return the declaration-order name at a numeric input position. */
     string inputName(size_t index) const
     {
         enforce(index < variableNames.length, "prepared input index is invalid");
@@ -186,6 +192,7 @@ final class FuzzyModelBuilder
         rules = new ExpressionZeroOrderSugeno;
     }
 
+    /** Declare an input and make it the target for subsequent terms. */
     FuzzyModelBuilder input(string name)
     {
         auto id = model.addVariable(name);
@@ -195,6 +202,7 @@ final class FuzzyModelBuilder
         return this;
     }
 
+    /** Add a membership term to the most recently declared input. */
     FuzzyModelBuilder term(string name, Degree delegate(double) evaluator)
     {
         enforce(currentVariable.length != 0, "define an input before its terms");
@@ -203,6 +211,7 @@ final class FuzzyModelBuilder
         return this;
     }
 
+    /** Select the single named output produced by the facade model. */
     FuzzyModelBuilder output(string name)
     {
         enforce(name.length != 0, "output name must not be empty");
@@ -211,17 +220,20 @@ final class FuzzyModelBuilder
     }
 
     /** Select the AND/OR semantics for subsequently defined rules. */
+    /** Select Gödel or Product semantics for subsequently added rules. */
     FuzzyModelBuilder operators(OperatorFamily family)
     {
         operatorFamily = family;
         return this;
     }
 
+    /** Start a named rule draft. */
     RuleDraft rule(string name)
     {
         return new RuleDraft(this, name);
     }
 
+    /** Validate and build the editable consumer model. */
     FuzzyModel build()
     {
         enforce(outputName.length != 0, "define an output before building");

@@ -7,6 +7,7 @@ import fuzzy.operators : OperatorFamily;
 struct FixedSugenoRule(alias Antecedent, double Consequent)
 {
     enum consequent = Consequent;
+    /** Evaluate this rule's compile-time-known antecedent. */
     static Degree activation(double input) pure
     {
         return Antecedent(input);
@@ -29,6 +30,7 @@ struct FixedSugenoResult
  */
 struct FixedSugeno(Rules...)
 {
+    /** Evaluate and preserve the explicit no-result state. */
     static FixedSugenoResult evaluateResult(double input) pure
     {
         FixedSugenoResult result;
@@ -50,6 +52,7 @@ struct FixedSugeno(Rules...)
         return result;
     }
 
+    /** Evaluate and return NaN when no rule is activated. */
     static double evaluate(double input) pure
     {
         return evaluateResult(input).value;
@@ -59,6 +62,7 @@ struct FixedSugeno(Rules...)
 /** Compile-time Sugeno evaluator with an explicit operator-family contract. */
 struct FixedSugenoWithOperators(OperatorFamily Family, Rules...)
 {
+    /** Evaluate a fixed rule pack under the selected operator family. */
     static FixedSugenoResult evaluateResult(double input) pure
     {
         FixedSugenoResult result;
@@ -80,6 +84,7 @@ struct FixedSugenoWithOperators(OperatorFamily Family, Rules...)
         return result;
     }
 
+    /** Evaluate and return NaN when no rule is activated. */
     static double evaluate(double input) pure
     {
         return evaluateResult(input).value;
