@@ -1,0 +1,47 @@
+name: Fast
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compiler-gate:
+    name: Fast / ${{ matrix.compiler }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [dmd-2.111.0, ldc-1.41.0]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install compiler
+        uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ${{ matrix.compiler }}
+          dub: 1.40.0
+      - name: Compiler versions
+        run: |
+          "$DC" --version
+          dub --version
+      - name: Package preview policy
+        run: |
+          if grep -nE '^[[:space:]]*dflags.*-preview=' dub.sdl; then
+            echo 'Package-level preview switches are not allowed.'
+            exit 1
+          fi
+      - name: Package tests
+        run: dub test --compiler="$DC" --force
+      - name: External consumer smoke
+        run: dub run --root=tests/consumer --compiler="$DC" --force
+      - name: Release-mode build
+        run: dub build --build=release --compiler="$DC" --force
+      - name: Ddoc build
+        if: startsWith(matrix.compiler, 'dmd-')
+        run: dub build --build=docs --compiler="$DC" --force

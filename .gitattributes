@@ -1,0 +1,8 @@
+* text=auto
+*.sh text eol=lf
+*.yml text eol=lf
+.github/ export-ignore
+tests/ export-ignore
+tools/ export-ignore
+evidence/ export-ignore
+.workspace/ export-ignore

@@ -1,0 +1,4 @@
+name "fuzzy-consumer-smoke"
+description "External consumer compile and run smoke for fuzzy-d"
+targetType "executable"
+dependency "fuzzy-d" path="../.."
