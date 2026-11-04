@@ -54,6 +54,9 @@ void main()
     assert(friendlyResult.output == "risk");
     assert(friendlyResult.value == 0.9);
     assert(friendly.prepare().evaluate(inputs().set("level", 5.0)).value == 0.9);
+    auto inactiveFriendly = friendly.evaluate(inputs().set("level", 0.0));
+    assert(!inactiveFriendly.hasValue);
+    assert(isNaN(inactiveFriendly.value));
     auto preparedFriendly = friendly.prepare();
     assert(preparedFriendly.inputCount == 1);
     assert(preparedFriendly.inputName(0) == "level");
