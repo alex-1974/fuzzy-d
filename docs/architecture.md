@@ -37,6 +37,7 @@ The repository now contains the first vertical slice of these paths:
 - caller-owned `InputVector` values with an optional presence mask.
 - a named consumer facade plus an ordered numeric prepared path for repeated
   fully-present evaluations;
+- an advanced prepared multi-output path with caller-owned result storage;
 - benchmark evidence for preparation amortization and measured numeric-path
   allocation behaviour.
 

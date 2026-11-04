@@ -96,3 +96,8 @@ The following are intentionally not re-exported from the package root:
 
 They are available for advanced integrations, prepared-plan construction and
 research work. The normal consumer should remain on the facade in `fuzzy`.
+
+For advanced multi-output models, `fuzzy.multioutput` provides both the
+allocation-producing `MultiOutputSugeno.evaluate` convenience method and
+caller-owned `evaluateInto` methods. `PreparedMultiOutputSugeno` is the
+repeated-evaluation path for fully present numeric inputs.
