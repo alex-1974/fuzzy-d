@@ -64,6 +64,7 @@ Or run the non-Ddoc qualification gates together:
 - [Pre-0.1 API freeze audit](docs/api-freeze-audit.md)
 - [Toolchain support](docs/toolchain-support.md)
 - [0.1 migration note](docs/migration-0.1.md)
+- [0.1.0 release checklist](docs/release-0.1-checklist.md)
 - [Thermostat tutorial](docs/tutorial/thermostat.md)
 - [Consumer qualification boundary](docs/consumer-qualification.md)
 - [Contributing](CONTRIBUTING.md)
