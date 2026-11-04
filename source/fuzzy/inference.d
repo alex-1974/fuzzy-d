@@ -167,6 +167,18 @@ final class PreparedZeroOrderSugeno
         return id;
     }
 
+    /** Create a worker-local evaluator with independent mutable caches. */
+    PreparedZeroOrderSugeno cloneForWorker()
+    {
+        auto result = new PreparedZeroOrderSugeno;
+        result.rules = rules.dup;
+        result.termCache = termCache.dup;
+        result.termCacheGeneration = new size_t[termCacheGeneration.length];
+        result.termUseCount = termUseCount.dup;
+        result.generation = 0;
+        return result;
+    }
+
     /** Validate and prepare an editable expression while adding the rule. */
     RuleId addRule(string name, NormalizedExpression antecedent,
                    const EditableModel model, double consequent)
@@ -374,6 +386,31 @@ unittest
     assert(result.trace.length == 2);
     assert(result.totalActivation == 1.0);
     assert(result.value == 17.5);
+}
+
+unittest
+{
+    import std.math : isNaN;
+    import fuzzy.membership : RisingRamp;
+    import fuzzy.ir : NormalizedExpression;
+
+    auto model = new EditableModel;
+    auto x = model.addVariable("x");
+    auto shape = RisingRamp(0.0, 10.0);
+    auto term = model.addTerm(x, "high", (double value) => shape(value));
+    NormalizedExpression expression;
+    expression.setRoot(expression.addTerm(term));
+    auto original = new PreparedZeroOrderSugeno;
+    original.addRule("high", expression.prepare(model), 42.0);
+    auto worker = original.cloneForWorker;
+    auto snapshot = model.prepare();
+    foreach (input; [0.0, 2.5, 7.5, 10.0])
+    {
+        auto workerValue = worker.evaluateValue(snapshot, [input]);
+        auto originalValue = original.evaluateValue(snapshot, [input]);
+        assert(isNaN(workerValue) == isNaN(originalValue));
+        if (!isNaN(workerValue)) assert(workerValue == originalValue);
+    }
 }
 
 unittest

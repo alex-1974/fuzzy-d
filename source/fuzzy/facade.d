@@ -147,6 +147,13 @@ final class PreparedFuzzyModel
         return rules.evaluateValue(model, values);
     }
 
+    /** Create a prepared facade with worker-local mutable evaluation caches. */
+    PreparedFuzzyModel cloneForWorker()
+    {
+        return new PreparedFuzzyModel(model, rules.cloneForWorker(), outputName,
+            variableIds.dup, variableNames.dup);
+    }
+
     @property size_t inputCount() const pure nothrow @safe @nogc
     {
         return variableNames.length;

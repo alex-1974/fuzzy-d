@@ -103,6 +103,6 @@ caller-owned `evaluateInto` methods. `PreparedMultiOutputSugeno` is the
 repeated-evaluation path for fully present numeric inputs.
 
 Prepared evaluator instances are intended to be configured once and then
-shared for read-only use. Each concurrent evaluation needs its own mutable
-caller-owned output buffer; the evaluator does not retain input or output
-array references.
+used repeatedly. For concurrent evaluation, call `cloneForWorker()` once per
+worker; each concurrent evaluation also needs its own mutable caller-owned
+output buffer. Evaluators do not retain input or output array references.

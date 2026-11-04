@@ -21,10 +21,11 @@ model and inference implementation types require explicit imports from
 - Build and preparation are configuration operations; do them before the hot
   loop.
 - A prepared evaluator does not retain caller input or output array references.
-- Prepared plans are intended for read-only sharing between threads.
-- Mutable caches in a prepared evaluator must not be concurrently evaluated by
-  multiple threads; use one evaluator instance per concurrent worker until a
-  thread-safe evaluator is introduced.
+- The immutable model/plan data may be shared between threads.
+- `PreparedZeroOrderSugeno` and `PreparedFuzzyModel` expose `cloneForWorker()`
+  for independent mutable caches; use one clone per concurrent worker.
+- The same evaluator instance must not be concurrently evaluated because its
+  adaptive term cache is mutable.
 - Each concurrent call owns its own input/output buffers.
 
 ## Numeric and failure contract
