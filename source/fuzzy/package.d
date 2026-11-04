@@ -1,11 +1,20 @@
 /**
 Package root of fuzzy-d.
 
-This pre-release scaffold intentionally does not export a fuzzy-inference API.
-Numerical and model interfaces will be introduced only with their documented
-contracts and tests.
+The package root is the human-facing entry point. Internal IR, model and
+inference implementation types remain available from their specialized modules
+but are not re-exported here.
 */
 module fuzzy;
+
+public import fuzzy.degree;
+public import fuzzy.compiletime;
+public import fuzzy.errors;
+public import fuzzy.facade;
+public import fuzzy.hedge;
+public import fuzzy.membership;
+public import fuzzy.multioutput;
+public import fuzzy.operators;
 
 /** Development marker (not a released semantic version).
 

@@ -2,7 +2,7 @@
 
 Reusable fuzzy-logic foundations and inference for the D programming language.
 
-> Status: pre-release initialization. No production inference API or published release exists yet.
+> Status: pre-release Type-1 core. No published release exists yet; the API is still subject to change.
 
 ## Purpose
 
@@ -16,10 +16,26 @@ The initial consumer is a plausibility validator for OpenStreetMap data, but thi
 
 ## Getting started
 
-The current repository only exposes a development-status marker. This is an intentionally minimal package/build smoke test; membership functions and inference follow in future milestones.
+The current pre-release core provides validated Type-1 degrees, membership functions, linguistic hedges, selectable basic operators, structured antecedent expressions, editable terms, normalized expressions and prepared zero-order Sugeno evaluation. The public API is still evolving and is not release-stable.
 
     import fuzzy;
     static assert(fuzzyDevelopmentStatus == "pre-0.1");
+
+    auto cold = triangle(0.0, 10.0, 20.0);
+    assert(cold(10.0).value == 1.0);
+
+    auto builder = new FuzzyModelBuilder;
+    builder.input("temperature")
+        .term("cold", (double value) => cold(value))
+        .output("risk")
+        .rule("cold temperature")
+        .when("temperature", "cold")
+        .then("risk", 0.2);
+
+    auto model = builder.build();
+    auto result = model.evaluate(inputs().set("temperature", 10.0));
+    assert(result.hasValue);
+    assert(result.output == "risk");
 
 Local commands:
 
@@ -33,6 +49,10 @@ Local commands:
 - [Architecture and boundaries](docs/architecture.md)
 - [Accuracy and validation plan](docs/accuracy-and-validation.md)
 - [Contributing](CONTRIBUTING.md)
+
+The same normalized expression can be prepared for repeated evaluation or
+specialized at compile time. Missing inputs use an explicit presence mask via
+`InputVector`; a missing value is never silently converted to zero.
 
 Development follows d-geospatial-workspace engineering practices when the canonical workspace documents are available locally. The repository remains independently buildable outside that workspace.
 

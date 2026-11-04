@@ -1,6 +1,6 @@
 # Architecture — working design
 
-Status: proposal, not an API freeze. The domain semantics are shared across execution mechanisms.
+Status: working design with an initial Type-1 implementation; not an API freeze.
 
 ## Boundary
 
@@ -22,6 +22,24 @@ fuzzy-d handles fuzzy membership, operators, rule models, inference and executio
 2. Prepared: validated, immutable plan evaluated repeatedly at runtime with cached constants and shared expression evaluation.
 3. Compiled: known model specialized during D compilation; numerical and logical semantics must match the prepared path.
 
+The repository now contains the first vertical slice of these paths:
+
+- validated `Degree` values and stateless Type-1 membership functions;
+- value-based expression templates suitable for CTFE;
+- an editable runtime model with stable variable and term IDs;
+- a normalized expression graph with model validation;
+- a copied `PreparedExpression` graph for repeated evaluation;
+- direct and prepared zero-order Sugeno evaluators with rule traces;
+- differential tests comparing direct and prepared results.
+- compile-time fixed Sugeno models with explicit no-result results;
+- explicit Gödel and product operator families across runtime, prepared and
+  compile-time expression paths;
+- caller-owned `InputVector` values with an optional presence mask.
+
+The current implementation is deliberately narrower than the final design. The
+editable model still accepts evaluator delegates, while the normalized graph is
+the intended boundary for later preparation and compile-time specialization.
+
 Rule data, normalization, diagnostics and supported operators must have one semantic authority. Do not let separate evaluators drift into independent fuzzy dialects.
 
 ## First inference target
@@ -36,6 +54,10 @@ Zero-order Takagi–Sugeno rules with documented antecedent operators and weight
 - Compile-time specialization may reduce indirect dispatch; avoid unconditional code explosion or numerical re-association.
 - Test numerical equivalence under an explicitly documented comparison tolerance.
 
-Open design questions: numeric type and .init semantics, policy for NaN/infinity, grouping of correlated evidence, and deterministic ordering of rule aggregation. These are not silently decided by the scaffold.
+Remaining design questions include the final public numeric type policy,
+Mamdani/defuzzification scope, grouping of correlated evidence, and the
+generalized multi-output rule IR. `Degree.init`, NaN/Infinity validation,
+missingness, operator selection and deterministic rule ordering are now covered
+by the initial implementation and tests.
 
 See ROADMAP.md for milestone sequencing.
