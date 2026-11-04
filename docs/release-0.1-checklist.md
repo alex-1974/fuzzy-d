@@ -23,10 +23,10 @@ bash tools/qualify.sh
 
 ## Required external confirmation
 
-- [ ] CI release matrix passes DMD 2.111.0, 2.112.1 and 2.113.0.
-- [ ] CI release matrix passes LDC 1.41.0, 1.42.0 and 1.43.0.
-- [ ] No compiler-specific failure is hidden by a local workaround.
-- [ ] Package metadata, license and changelog checks pass on the release branch.
+- [x] CI release matrix passes DMD 2.111.0, 2.112.1 and 2.113.0.
+- [x] CI release matrix passes LDC 1.41.0, 1.42.0 and 1.43.0.
+- [x] No compiler-specific failure is hidden by a local workaround.
+- [x] Package metadata, license and changelog checks pass on the release branch.
 - [ ] Maintainer reviews the candidate public API and migration note.
 
 ## Release decision
