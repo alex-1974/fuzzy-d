@@ -20,7 +20,7 @@ jobs:
         compiler: [dmd-2.111.0, ldc-1.41.0]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install compiler
         uses: dlang-community/setup-dlang@v2
         with:
