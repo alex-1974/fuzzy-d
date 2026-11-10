@@ -29,7 +29,7 @@ jobs:
           - ldc-1.43.0
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install compiler
         uses: dlang-community/setup-dlang@v2
         with:
